@@ -1,0 +1,102 @@
+.navbar {
+  width: 100%;
+  background: var(--yellow);
+  padding: 20px 50px;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.content-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.logoBox {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #8fc3ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.brandText {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.content-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.langButton,
+.helpButton {
+  border: 1px;
+  border-radius: var(--radius-full);
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.langButton {
+  min-width: 116px;
+  width: 100%;
+  height: 50px;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.langButton span {
+  color: var(--blue);
+}
+
+.langButton svg {
+  width: 7px;
+  height: 4.32px;
+}
+
+.helpButton {
+  min-width: 154px;
+  width: 100%;
+  height: 50px;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.helpButton svg {
+  width: 20px;
+  height: 20px;
+}

@@ -1,0 +1,132 @@
+.preload-page {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.preload-page__content {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preload-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background: #9dc8ee;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.preload-title {
+  margin: 28px 0 0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #2d3138;
+  text-align: center;
+}
+
+.preload-bar {
+  width: 100%;
+  height: 12px;
+  margin-top: 36px;
+  border-radius: 999px;
+  background: #a9cfee;
+  overflow: hidden;
+  position: relative;
+}
+
+.preload-bar__fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: #f2c744;
+  transition: width 0.2s ease;
+}
+
+.preload-bar--indeterminate .preload-bar__fill {
+  position: absolute;
+  animation: preload-slide 1.2s infinite ease-in-out;
+}
+
+.preload-text-wrap {
+  min-height: 40px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preload-dots {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: #2d3138;
+  letter-spacing: 2px;
+}
+
+.preload-message {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7d8590;
+  text-align: center;
+}
+
+.preload-message.is-error {
+  color: #c0392b;
+}
+
+.preload-message.is-success {
+  color: #2d3138;
+}
+
+@keyframes preload-slide {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .preload-page__content {
+    max-width: 360px;
+  }
+
+  .preload-logo {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .preload-title {
+    font-size: 24px;
+  }
+
+  .preload-bar {
+    height: 10px;
+    margin-top: 30px;
+  }
+
+  .preload-dots {
+    font-size: 22px;
+  }
+
+  .preload-message {
+    font-size: 11px;
+  }
+}

@@ -1,0 +1,237 @@
+.search-page {
+    background: var(--background);
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.search-page__back {
+    margin-top: 30px;
+}
+
+.search-page__content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 100px;
+}
+
+.search-page__header {
+    text-align: center;
+}
+
+.search-page__header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #1f2937;
+}
+
+.search-page__header p {
+    margin: 14px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #2d3138;
+}
+
+.plate-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 12px;
+    border-radius: 22px;
+    background: #eed37b;
+    box-sizing: border-box;
+}
+
+.plate-card__label {
+    display: block;
+    margin: 0 0 10px 4px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #8f7530;
+}
+
+.plate-card__display {
+    min-height: 90px;
+    border-radius: 16px;
+    background: #f6f6f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.4;
+    color: #9aa1aa;
+}
+
+.plate-card__display.is-filled {
+    color: #2d3138;
+    font-weight: 600;
+}
+
+.search-page__hint {
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+    font-size: 11px;
+    line-height: 1.8;
+    color: #9aa1aa;
+    text-align: center;
+}
+
+.search-page__error {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #dc2626;
+    text-align: center;
+}
+
+.plate-keyboard {
+    width: 100%;
+    max-width: 848px;
+    height: 403px;
+    padding: 28px 20px;
+    border-radius: 28px;
+    background: #dfe5ec;
+    display: grid;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    gap: 12px 14px;
+    box-sizing: border-box;
+}
+
+.plate-keyboard__key,
+.plate-keyboard__action {
+    border: none;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.plate-keyboard__key {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 999px;
+    background: #f7f7f7;
+    color: #30343b;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.plate-keyboard__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 68px;
+    cursor: pointer;
+}
+
+.plate-keyboard__action--delete {
+    grid-column: span 2;
+    border-radius: 999px;
+    background: #c5ced8;
+    color: #2d3138;
+    font-size: 28px;
+}
+
+.plate-keyboard__action--confirm {
+    grid-column: span 6;
+    border-radius: 999px;
+    background: #f2c744;
+    color: #6a5310;
+    font-size: 20px;
+    font-weight: 800;
+    text-transform: lowercase;
+}
+
+.plate-keyboard__key:disabled,
+.plate-keyboard__action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+    .search-page {
+        padding: 40px 16px 60px;
+    }
+
+    .search-page__content {
+        max-width: 760px;
+        padding-top: 20px;
+    }
+
+    .plate-keyboard {
+        max-width: 100%;
+        padding: 20px 14px;
+        gap: 10px;
+    }
+
+    .plate-keyboard__key {
+        font-size: 16px;
+    }
+
+    .plate-keyboard__action {
+        min-height: 56px;
+    }
+
+    .plate-keyboard__action--delete {
+        font-size: 22px;
+    }
+
+    .plate-keyboard__action--confirm {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-page__header h1 {
+        font-size: 24px;
+    }
+
+    .search-page__header p {
+        font-size: 12px;
+    }
+
+    .plate-card {
+        max-width: 320px;
+        margin-top: 40px;
+    }
+
+    .plate-card__display {
+        min-height: 82px;
+        font-size: 16px;
+    }
+
+    .plate-keyboard {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px;
+        border-radius: 20px;
+    }
+
+    .plate-keyboard__key {
+        font-size: 14px;
+    }
+
+    .plate-keyboard__action {
+        min-height: 42px;
+    }
+
+    .plate-keyboard__action--delete {
+        grid-column: span 2;
+        font-size: 18px;
+    }
+
+    .plate-keyboard__action--confirm {
+        grid-column: span 4;
+        font-size: 14px;
+    }
+}

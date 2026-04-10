@@ -1,0 +1,386 @@
+.detail-page {
+    min-height: calc(100vh - 80px);
+    background: var(--background);
+    padding: 56px 16px 80px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.detail-page__back {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+}
+
+.detail-page__content {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.detail-page__header {
+    width: 100%;
+    padding-top: 90px;
+    text-align: center;
+}
+
+.detail-page__header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #1f2937;
+}
+
+.detail-page__header p {
+    margin: 14px 0 0;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #2d3138;
+}
+
+.detail-plate-card {
+    width: 100%;
+    max-width: 430px;
+    margin-top: 72px;
+    padding: 12px;
+    border-radius: 18px;
+    background: #f1dd95;
+    box-sizing: border-box;
+}
+
+.detail-plate-card__label {
+    display: block;
+    margin: 0 0 8px 6px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #8a6f24;
+}
+
+.detail-plate-card__input {
+    min-height: 54px;
+    border-radius: 14px;
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.detail-plate-card__value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #7b8088;
+}
+
+.detail-plate-card__edit {
+    width: 43px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a8a8a;
+    flex-shrink: 0;
+}
+
+.detail-plate-card__edit--done {
+    color: #64D301;
+}
+
+.detail-section-title {
+    width: 100%;
+    margin: 14px 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d3138;
+}
+
+.detail-info-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.detail-info-card {
+    min-height: 92px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #f1dd95;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.detail-info-card__label {
+    font-size: 10px;
+    line-height: 1.5;
+    color: #6f5c28;
+}
+
+.detail-info-card strong {
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #20252d;
+}
+
+.detail-info-card:nth-child(1) strong,
+.detail-info-card:nth-child(2) strong,
+.detail-info-card:nth-child(3) strong {
+    font-size: 14px;
+}
+
+.detail-info-card--fee {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.detail-info-card__fee-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.detail-info-card__danger {
+    margin-top: 8px;
+    font-size: 14px !important;
+    color: #e11d1d !important;
+    font-weight: 700;
+}
+
+.detail-fee-box {
+    min-width: 90px;
+    min-height: 72px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.detail-fee-box span {
+    font-size: 10px;
+    color: #8a8f98;
+}
+
+.detail-fee-box strong {
+    margin-top: 6px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ff2d2d;
+    line-height: 1.1;
+}
+
+.payment-panel {
+    width: 100%;
+    margin-top: 14px;
+    padding: 18px 18px 22px;
+    border: 1.5px solid #e2c76b;
+    border-radius: 18px;
+    background: transparent;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.payment-panel h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #1f2937;
+}
+
+.payment-panel__note {
+    margin: 18px 0 0;
+    font-size: 11px;
+    line-height: 1.8;
+    color: #3e434b;
+}
+
+.payment-card {
+    width: 156px;
+    margin: 20px auto 0;
+    padding: 14px;
+    border-radius: 16px;
+    background: #f2c744;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.payment-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.payment-card__logo {
+    min-width: 46px;
+    height: 30px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #3b5b8d;
+    font-size: 7px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-card__tag {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.payment-card__tag span {
+    font-size: 7px;
+    letter-spacing: 0.08em;
+    color: #9a7b09;
+}
+
+.payment-card__tag i {
+    width: 22px;
+    height: 3px;
+    border-radius: 999px;
+    background: #8e771c;
+    display: block;
+}
+
+.payment-card__body {
+    margin-top: 26px;
+}
+
+.payment-card__body h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #20252d;
+}
+
+.payment-card__body p {
+    margin: 4px 0 0;
+    font-size: 10px;
+    color: #6a5310;
+}
+
+.payment-card__button {
+    margin-top: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.payment-panel__help {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-panel__help span {
+    font-size: 10px;
+    color: #8a8f98;
+}
+
+.payment-panel__help a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #f2b81f;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .detail-page {
+        padding: 40px 16px 60px;
+    }
+
+    .detail-page__header {
+        padding-top: 82px;
+    }
+
+    .detail-page__header h1 {
+        font-size: 24px;
+    }
+
+    .detail-page__header p {
+        font-size: 16px;
+    }
+
+    .detail-plate-card {
+        margin-top: 56px;
+    }
+
+    .detail-info-grid {
+        gap: 8px;
+    }
+
+    .detail-info-card {
+        min-height: 86px;
+        padding: 14px;
+    }
+
+    .detail-info-card strong {
+        font-size: 13px;
+    }
+
+    .detail-info-card__danger {
+        font-size: 13px !important;
+    }
+
+    .detail-fee-box {
+        min-width: 84px;
+        min-height: 68px;
+    }
+
+    .detail-fee-box strong {
+        font-size: 20px;
+    }
+
+    .payment-panel h2 {
+        font-size: 18px;
+    }
+
+    .payment-panel__note {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 560px) {
+    .detail-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-info-card--fee {
+        align-items: stretch;
+    }
+
+    .detail-fee-box {
+        min-width: 78px;
+    }
+}
