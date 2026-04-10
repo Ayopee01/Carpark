@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { FiRefreshCw, FiHeadphones } from "react-icons/fi";
 import "@/src/app/css/PlateNotFoundPopup.css";
 

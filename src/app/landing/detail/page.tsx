@@ -25,22 +25,16 @@ function DetailPage() {
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [data, setData] = useState<DetailData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [plateValue, setPlateValue] = useState("");
+    const [fetchError, setFetchError] = useState("");
+    const [resolvedPlate, setResolvedPlate] = useState("");
 
     useEffect(() => {
-        if (!plate) {
-            setLoading(false);
-            setError("ไม่พบเลขทะเบียน");
-            return;
-        }
+        if (!plate) return;
+
+        let cancelled = false;
 
         const loadData = async () => {
             try {
-                setLoading(true);
-                setError("");
-
                 const res = await fetch(
                     `/api/mockdata?plate=${encodeURIComponent(plate)}`,
                     {
@@ -51,62 +45,42 @@ function DetailPage() {
 
                 const result = await res.json();
 
+                if (cancelled) return;
+
                 if (!res.ok || !result.ok) {
+                    setResolvedPlate(plate);
                     setData(null);
-                    setError("ไม่พบข้อมูลทะเบียนนี้");
+                    setFetchError("ไม่พบข้อมูลทะเบียนนี้");
                     return;
                 }
 
+                setResolvedPlate(plate);
                 setData(result.data);
-                setPlateValue(result.data.plate);
+                setFetchError("");
             } catch {
+                if (cancelled) return;
+
+                setResolvedPlate(plate);
                 setData(null);
-                setError("โหลดข้อมูลไม่สำเร็จ");
-            } finally {
-                setLoading(false);
+                setFetchError("โหลดข้อมูลไม่สำเร็จ");
             }
         };
 
         loadData();
+
+        return () => {
+            cancelled = true;
+        };
     }, [plate]);
 
-    if (loading) {
-        return (
-            <section className="detail-page">
-                <div className="detail-page__back">
-                    <BackBtn />
-                </div>
+    const currentData = resolvedPlate === plate ? data : null;
+    const error = !plate
+        ? "ไม่พบเลขทะเบียน"
+        : resolvedPlate === plate
+            ? fetchError
+            : "";
 
-                <div className="detail-page__content">
-                    <header className="detail-page__header">
-                        <h1>ค้นหาเลขทะเบียน</h1>
-                        <p>รายละเอียดเพิ่มเติม</p>
-                    </header>
-
-                    <div className="detail-loading">กำลังโหลดข้อมูล...</div>
-                </div>
-            </section>
-        );
-    }
-
-    if (error || !data) {
-        return (
-            <section className="detail-page">
-                <div className="detail-page__back">
-                    <BackBtn />
-                </div>
-
-                <div className="detail-page__content">
-                    <header className="detail-page__header">
-                        <h1>ค้นหาเลขทะเบียน</h1>
-                        <p>รายละเอียดเพิ่มเติม</p>
-                    </header>
-
-                    <div className="detail-error">{error || "ไม่พบข้อมูล"}</div>
-                </div>
-            </section>
-        );
-    }
+    const plateValue = currentData?.plate || plate || "-";
 
     return (
         <>
@@ -138,20 +112,22 @@ function DetailPage() {
 
                     <div className="detail-section-title">รายละเอียดเพิ่มเติม</div>
 
+                    {error ? <div className="detail-error">{error}</div> : null}
+
                     <div className="detail-info-grid">
                         <div className="detail-info-card">
                             <span className="detail-info-card__label">วัน/เดือน/ปี :</span>
-                            <strong>{data.date}</strong>
+                            <strong>{currentData?.date || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card">
                             <span className="detail-info-card__label">เวลาเข้า :</span>
-                            <strong>{data.entryTime}</strong>
+                            <strong>{currentData?.entryTime || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card">
                             <span className="detail-info-card__label">เวลาที่ใช้บริการ :</span>
-                            <strong>{data.duration}</strong>
+                            <strong>{currentData?.duration || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card detail-info-card--fee">
@@ -160,13 +136,15 @@ function DetailPage() {
                                     สถานะการชำระค่าบริการ :
                                 </span>
                                 <strong className="detail-info-card__danger">
-                                    {data.paymentStatus}
+                                    {currentData?.paymentStatus || "-"}
                                 </strong>
                             </div>
 
                             <div className="detail-fee-box">
                                 <span>ค่าบริการ</span>
-                                <strong>{data.amount} บาท</strong>
+                                <strong>
+                                    {currentData?.amount != null ? `${currentData.amount} บาท` : "-"}
+                                </strong>
                             </div>
                         </div>
                     </div>
@@ -189,7 +167,7 @@ function DetailPage() {
                             </div>
 
                             <div className="payment-card__body">
-                                <h3>{data.paymentMethod}</h3>
+                                <h3>{currentData?.paymentMethod || "-"}</h3>
                                 <p>ค้นหาทะเบียนรถ</p>
                             </div>
 
@@ -197,6 +175,7 @@ function DetailPage() {
                                 type="button"
                                 className="payment-card__button"
                                 onClick={() => setIsPopupOpen(true)}
+                                disabled={!currentData}
                             >
                                 ดำเนินการต่อ
                             </button>
@@ -217,7 +196,7 @@ function DetailPage() {
             <PaymentPopup
                 open={isPopupOpen}
                 onClose={() => setIsPopupOpen(false)}
-                amount={data.amount}
+                amount={currentData?.amount ?? 0}
             />
         </>
     );

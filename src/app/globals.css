@@ -8,6 +8,7 @@
   /* text&icons color */
   --blue: #4A90E2;
   --green: #64D301;
+  --black: #0D1B2A;
 
   --text-primary: #111827;
   --text-secondary: #1f2937;
@@ -25,6 +26,5 @@ html,
 body {
   margin: 0;
   padding: 0;
-  max-width: 1080px;
   font-family: var(--font-inter), var(--font-thai), sans-serif;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
 import BackBtn from "@/src/app/components/BackBtn";
 import "@/src/app/css/Scan.css";

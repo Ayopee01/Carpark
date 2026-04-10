@@ -5,16 +5,17 @@
     box-sizing: border-box;
 }
 
-.search-page__back {
-    margin-top: 30px;
-}
-
 .search-page__content {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 100px;
+    padding: 0 20px;
+}
+
+.search-page__back {
+    margin-top: 30px;
+    text-align: start;
 }
 
 .search-page__header {
@@ -89,6 +90,10 @@
     line-height: 1.5;
     color: #dc2626;
     text-align: center;
+}
+
+.plate-keyboard-container {
+    justify-items: center;
 }
 
 .plate-keyboard {

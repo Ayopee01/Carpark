@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
+import "@/src/app/css/PreloadPopup.css";
 //import components
 import Navbar from "./components/Navbar";
 

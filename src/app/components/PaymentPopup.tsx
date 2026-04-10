@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FiXCircle } from "react-icons/fi";
 import { BsQrCodeScan } from "react-icons/bs";
 import "@/src/app/css/PaymentPopup.css";
@@ -11,16 +11,18 @@ type PaymentPopupProps = {
   amount?: number;
 };
 
-function PaymentPopup({
-  open,
+type PaymentPopupContentProps = {
+  onClose: () => void;
+  amount: number;
+};
+
+function PaymentPopupContent({
   onClose,
-  amount = 80,
-}: PaymentPopupProps) {
+  amount,
+}: PaymentPopupContentProps) {
   const [timeLeft, setTimeLeft] = useState(60);
 
   useEffect(() => {
-    if (!open) return;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -36,16 +38,13 @@ function PaymentPopup({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [onClose]);
 
   useEffect(() => {
-    if (!open) return;
-
-    setTimeLeft(60);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || timeLeft <= 0) return;
+    if (timeLeft <= 0) {
+      onClose();
+      return;
+    }
 
     const timer = window.setTimeout(() => {
       setTimeLeft((prev) => prev - 1);
@@ -54,41 +53,28 @@ function PaymentPopup({
     return () => {
       window.clearTimeout(timer);
     };
-  }, [open, timeLeft]);
-
-  useEffect(() => {
-    if (open && timeLeft === 0) {
-      onClose();
-    }
-  }, [open, timeLeft, onClose]);
-
-  if (!open) return null;
+  }, [timeLeft, onClose]);
 
   return (
-    <div
-      className="payment-popup-overlay"
-      onClick={onClose}
-      aria-hidden="true"
-    >
+    <div className="payment-popup-overlay" onClick={onClose}>
       <div
         className="payment-popup"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="ชำระค่าบริการ"
+        aria-labelledby="payment-popup-title"
       >
         <div className="payment-popup__header">
           <span className="payment-popup__dot" />
-          <h2>ชำระค่าบริการ</h2>
+          <h2 id="payment-popup-title">ชำระค่าบริการ</h2>
         </div>
 
         <div className="payment-popup__card">
           <div className="payment-popup__brand">
             <div className="payment-popup__brand-icon">P</div>
-
             <h3>Smart Carpark</h3>
             <p>การชำระค่าบริการ</p>
-            <strong>PromPay</strong>
+            <strong>PromptPay</strong>
           </div>
 
           <div className="payment-popup__qr-frame">
@@ -96,7 +82,9 @@ function PaymentPopup({
               <BsQrCodeScan />
             </div>
 
-            <div className="payment-popup__amount">{amount}</div>
+            <div className="payment-popup__amount">
+              {amount.toLocaleString("th-TH")}
+            </div>
             <div className="payment-popup__currency">บาท</div>
             <p className="payment-popup__caption">สแกนเพื่อชำระค่าบริการ</p>
           </div>
@@ -117,6 +105,16 @@ function PaymentPopup({
       </div>
     </div>
   );
+}
+
+function PaymentPopup({
+  open,
+  onClose,
+  amount = 80,
+}: PaymentPopupProps) {
+  if (!open) return null;
+
+  return <PaymentPopupContent onClose={onClose} amount={amount} />;
 }
 
 export default PaymentPopup;
