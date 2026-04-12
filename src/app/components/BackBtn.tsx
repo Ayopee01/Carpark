@@ -6,6 +6,7 @@ import { FiChevronLeft } from "react-icons/fi";
 // import css
 import "../css/BackBtn.css";
 
+// -------------------------- Function --------------------------
 function BackBtn() {
   const router = useRouter();
 
@@ -16,11 +17,11 @@ function BackBtn() {
       router.push("/");
     }
   };
-
+  // -------------------------- UI --------------------------
   return (
     <section>
       <button type="button" className="back-btn" onClick={handleBack}>
-        <FiChevronLeft className="back-btn__icon" />
+        <FiChevronLeft />
         <span>ย้อนกลับ</span>
       </button>
     </section>

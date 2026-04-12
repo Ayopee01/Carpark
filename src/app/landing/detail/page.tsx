@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FiPhoneCall } from "react-icons/fi";
 import { FaCheck } from "react-icons/fa";

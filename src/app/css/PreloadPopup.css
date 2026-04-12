@@ -148,7 +148,7 @@
 
 .plate-popup__preload-car-icon {
   font-size: 17px;
-  color: var(--black);
+  color: var(--text-primary);
 }
 
 /* วงกลาง */
@@ -170,7 +170,7 @@
 
 .plate-popup__preload-loop-icon {
   font-size: 27px;
-  color: var(--black);
+  color: var(--text-primary);
   animation: platePopupSpinLoop 1s linear infinite;
 }
 

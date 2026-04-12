@@ -1,0 +1,52 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+    z-index: 998;
+}
+
+.overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.sidebar {
+    position: fixed;
+    top: 113px;
+    /* = ความสูง navbar */
+    right: 0;
+    height: calc(100% - 113px);
+    /* กันล้น */
+
+    width: 280px;
+    background: #fff;
+
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+/* responsive */
+@media (min-width: 768px) {
+    .overlay {
+        display: none;
+    }
+
+    .sidebar {
+        display: none;
+    }
+}

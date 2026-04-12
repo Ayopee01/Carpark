@@ -92,7 +92,7 @@
 }
 
 .detail-plate-card__edit--done {
-    color: #64D301;
+    color: var(--icon-check);
 }
 
 .detail-section-title {

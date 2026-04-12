@@ -1,34 +1,33 @@
 .back-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-
-  min-width: 108px;
-  height: 42px;
-  padding: 0 16px;
-
-  border: 1.5px solid #f2c744;
-  border-radius: 999px;
-  background: transparent;
-
-  color: #4c86d6;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
-
+  min-width: 116px;
+  height: 50px;
+  gap: 8px;
+  background: var(--background);
+  border: 1px solid var(--theme-yellow);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  outline: none;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
+.back-btn span {
+  color: var(--text-menu-nav);
+  font-size: 16px;
+  font-weight: 700;
+  font-style: bold;
+  line-height: 24px;
+}
+
+/* hover */
 .back-btn:hover {
   background: rgba(242, 199, 68, 0.08);
-  transform: translateY(-1px);
 }
 
-.back-btn__icon {
-  font-size: 16px;
+/* icon */
+.back-btn svg {
+  width: var(--w-dropdown);
+  height: var(--h-dropdown);
   flex-shrink: 0;
 }
