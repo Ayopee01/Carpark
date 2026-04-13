@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { FiChevronDown } from "react-icons/fi";
 import { CiCircleQuestion } from "react-icons/ci";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import LangButton from "./LangButton";
 import "../css/SideMenu.css";
 
 function SideMenu({ open, onClose }) {
+    const t = useTranslations("SideMenu");
 
-    // Close on ESC
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === "Escape") onClose();
@@ -18,7 +19,6 @@ function SideMenu({ open, onClose }) {
         return () => window.removeEventListener("keydown", handleKey);
     }, [onClose]);
 
-    // lock scroll
     useEffect(() => {
         if (open) {
             document.body.style.overflow = "hidden";
@@ -33,30 +33,23 @@ function SideMenu({ open, onClose }) {
 
     return (
         <>
-            {/* overlay */}
             <div
                 className={`overlay ${open ? "show" : ""}`}
                 onClick={onClose}
             />
 
-            {/* sidebar */}
             <aside className={`sidebar ${open ? "open" : ""}`}>
                 <div className="sidebar-content">
-
-                    <button className="langButton">
-                        <span>TH</span>
-                        <FiChevronDown />
-                    </button>
+                    <LangButton />
 
                     <Link
-                        className="helpButton"
+                        className="helpButton_side"
                         href="/landing/help"
                         onClick={onClose}
                     >
                         <CiCircleQuestion />
-                        ช่วยเหลือ
+                        {t("help")}
                     </Link>
-
                 </div>
             </aside>
         </>

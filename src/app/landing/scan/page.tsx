@@ -1,10 +1,13 @@
 "use client";
 
 import { MdOutlineQrCodeScanner } from "react-icons/md";
+import { useTranslations } from "next-intl";
 import BackBtn from "@/src/app/components/BackBtn";
 import "@/src/app/css/Scan.css";
 
 function ScanPage() {
+    const t = useTranslations("Scan");
+
     return (
         <section className="scan-page">
             <div className="scan-page__back">
@@ -14,7 +17,7 @@ function ScanPage() {
             <div className="scan-page__content">
                 <div className="scan-page__header">
                     <h1>Smart Carpark</h1>
-                    <p>สแกนเพื่อค้นหาเลขทะเบียน</p>
+                    <p>{t("subtitle")}</p>
                 </div>
 
                 <div className="scan-page__divider" />
@@ -33,9 +36,9 @@ function ScanPage() {
                 </div>
 
                 <p className="scan-page__hint">
-                    กรุณาจัดวางเลขทะเบียนรถ หรือคิวอาร์โค้ดให้อยู่
+                    {t("hintLine1")}
                     <br />
-                    ภายในกรอบเพื่อทำการสแกน
+                    {t("hintLine2")}
                 </p>
             </div>
         </section>

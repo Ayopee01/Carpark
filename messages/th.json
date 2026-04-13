@@ -1,0 +1,106 @@
+{
+  "Common": {
+    "back": "ย้อนกลับ",
+    "contactStaff": "ติดต่อเจ้าหน้าที่",
+    "continue": "ดำเนินการต่อ",
+    "cancel": "ยกเลิก",
+    "smartCarpark": "Smart Carpark",
+    "paymentService": "การชำระค่าบริการ",
+    "baht": "บาท",
+    "seconds": "วินาที",
+    "pleaseWait": "กรุณารอสักครู่"
+  },
+  "SideMenu": {
+    "help": "ช่วยเหลือ",
+    "thai": "ไทย",
+    "english": "English",
+    "chinese": "中文"
+  },
+  "Navbar": {
+    "customerSubtitle": "ลูกค้า - Customer",
+    "help": "ช่วยเหลือ"
+  },
+  "Dashboard": {
+    "welcome": "ยินดีต้อนรับ",
+    "description": "ระบบ Kiosk สำหรับให้บริการชำระค่าจอดรถแบบครบวงจร ที่ช่วยให้ผู้ใช้สามารถค้นหาข้อมูล แสดงรายละเอียด และชำระเงินได้อย่างสะดวก รวดเร็ว และใช้งานง่าย",
+    "scanTitle": "Scan Receipt QR",
+    "scanSubtitle": "สแกน QR ใบเสร็จ",
+    "searchTitle": "Search License Plate",
+    "searchSubtitle": "ค้นหาทะเบียนรถ"
+  },
+  "Help": {
+    "title": "Smart Carpark Support",
+    "subtitle": "Concierge",
+    "descLine1": "We’re here to ensure your parking experience",
+    "descLine2": "is as seamless as your drive.",
+    "contactTitle": "Help/Contact Staff",
+    "contactStaff": "ติดต่อเจ้าหน้าที่"
+  },
+  "Scan": {
+    "subtitle": "สแกนเพื่อค้นหาเลขทะเบียน",
+    "hintLine1": "กรุณาจัดวางเลขทะเบียนรถ หรือคิวอาร์โค้ดให้อยู่",
+    "hintLine2": "ภายในกรอบเพื่อทำการสแกน"
+  },
+  "Search": {
+    "subtitle": "กรอกข้อมูลเลขทะเบียนรถของคุณ",
+    "plateLabel": "ระบุเลขทะเบียนรถ",
+    "platePlaceholder": "1กข 1234",
+    "errorRequired": "กรุณากรอกเลขทะเบียนรถ",
+    "errorInvalidData": "รูปแบบข้อมูลไม่ถูกต้อง",
+    "errorSearchFailed": "ค้นหาข้อมูลไม่สำเร็จ",
+    "errorUnexpected": "เกิดข้อผิดพลาดบางอย่าง",
+    "confirm": "ยืนยัน",
+    "loadingButton": "กำลังโหลด...",
+    "processing": "กำลังประมวลผล",
+    "loadingData": "กำลังโหลดข้อมูล..."
+  },
+  "Detail": {
+    "title": "ค้นหาเลขทะเบียน",
+    "subtitle": "รายละเอียดเพิ่มเติม",
+    "plateLabel": "เลขทะเบียน :",
+    "sectionTitle": "รายละเอียดเพิ่มเติม",
+    "dateLabel": "วัน/เดือน/ปี :",
+    "entryTimeLabel": "เวลาเข้า :",
+    "durationLabel": "เวลาที่ใช้บริการ :",
+    "paymentStatusLabel": "สถานะการชำระค่าบริการ :",
+    "serviceFee": "ค่าบริการ",
+    "paymentChannels": "ช่องทางการชำระค่าบริการ",
+    "paymentNote": "***เมื่อชำระค่าบริการเรียบร้อยแล้วจะต้องออกจากที่จอดรถภายในเวลา 15 นาที***",
+    "searchLicensePlate": "ค้นหาทะเบียนรถ",
+    "paymentProblem": "มีปัญหาในการชำระเงิน?",
+    "errorNoPlate": "ไม่พบเลขทะเบียน",
+    "errorPlateNotFound": "ไม่พบข้อมูลทะเบียนนี้",
+    "errorLoadFailed": "โหลดข้อมูลไม่สำเร็จ"
+  },
+  "PaymentPopup": {
+    "title": "ชำระค่าบริการ",
+    "caption": "สแกนเพื่อชำระค่าบริการ",
+    "payWithin": "กรุณาชำระเงินภายใน",
+    "cancel": "ยกเลิก"
+  },
+  "PlateNotFoundPopup": {
+    "topText": "ลองอีกครั้ง",
+    "title": "ไม่พบเลขทะเบียน",
+    "retryAria": "ตรวจสอบอีกครั้ง",
+    "retry": "ตรวจสอบอีกครั้ง",
+    "contactStaff": "ติดต่อเจ้าหน้าที่"
+  },
+  "PreloadPopup": {
+    "processing": "กำลังประมวลผล",
+    "loadingData": "กำลังโหลดข้อมูล...",
+    "pleaseWait": "กรุณารอสักครู่"
+  },
+  "ReceiptSuccessPopup": {
+    "title": "ชำระค่าบริการสำเร็จ",
+    "printReceipt": "พิมพ์ใบเสร็จ",
+    "takeReceipt": "กรุณารับใบเสร็จ",
+    "thankYou": "ขอบคุณที่ใช้บริการ",
+    "finish": "เสร็จสิ้น"
+  },
+  "PreloadPage": {
+    "loadingData": "กำลังโหลดข้อมูล...",
+    "loadedSuccess": "โหลดสำเร็จ",
+    "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+    "loadingFromApi": "กำลังโหลดข้อมูลจาก API"
+  }
+}

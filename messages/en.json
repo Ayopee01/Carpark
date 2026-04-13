@@ -1,0 +1,106 @@
+{
+  "Common": {
+    "back": "Back",
+    "contactStaff": "Contact staff",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "smartCarpark": "Smart Carpark",
+    "paymentService": "Service payment",
+    "baht": "Baht",
+    "seconds": "seconds",
+    "pleaseWait": "Please wait a moment"
+  },
+  "SideMenu": {
+    "help": "Help",
+    "thai": "Thai",
+    "english": "English",
+    "chinese": "Chinese"
+  },
+  "Navbar": {
+    "customerSubtitle": "Customer",
+    "help": "Help"
+  },
+  "Dashboard": {
+    "welcome": "Welcome",
+    "description": "A kiosk system for complete parking payment service that helps users search information, view details, and make payments quickly and easily.",
+    "scanTitle": "Scan Receipt QR",
+    "scanSubtitle": "Scan receipt QR",
+    "searchTitle": "Search License Plate",
+    "searchSubtitle": "Search license plate"
+  },
+  "Help": {
+    "title": "Smart Carpark Support",
+    "subtitle": "Concierge",
+    "descLine1": "We’re here to ensure your parking experience",
+    "descLine2": "is as seamless as your drive.",
+    "contactTitle": "Help/Contact Staff",
+    "contactStaff": "Contact staff"
+  },
+  "Scan": {
+    "subtitle": "Scan to search for a license plate",
+    "hintLine1": "Please position the license plate or QR code",
+    "hintLine2": "inside the frame for scanning"
+  },
+  "Search": {
+    "subtitle": "Enter your license plate number",
+    "plateLabel": "License plate number",
+    "platePlaceholder": "ABC 1234",
+    "errorRequired": "Please enter a license plate number",
+    "errorInvalidData": "Invalid data format",
+    "errorSearchFailed": "Search failed",
+    "errorUnexpected": "An unexpected error occurred",
+    "confirm": "Confirm",
+    "loadingButton": "Loading...",
+    "processing": "Processing",
+    "loadingData": "Loading data..."
+  },
+  "Detail": {
+    "title": "Search License Plate",
+    "subtitle": "Details",
+    "plateLabel": "License plate :",
+    "sectionTitle": "Details",
+    "dateLabel": "Date :",
+    "entryTimeLabel": "Entry time :",
+    "durationLabel": "Duration :",
+    "paymentStatusLabel": "Payment status :",
+    "serviceFee": "Service fee",
+    "paymentChannels": "Payment methods",
+    "paymentNote": "***After payment is completed, please exit the parking area within 15 minutes***",
+    "searchLicensePlate": "Search license plate",
+    "paymentProblem": "Having trouble with payment?",
+    "errorNoPlate": "License plate not found",
+    "errorPlateNotFound": "This plate record was not found",
+    "errorLoadFailed": "Failed to load data"
+  },
+  "PaymentPopup": {
+    "title": "Payment",
+    "caption": "Scan to pay",
+    "payWithin": "Please complete payment within",
+    "cancel": "Cancel"
+  },
+  "PlateNotFoundPopup": {
+    "topText": "Try again",
+    "title": "Plate not found",
+    "retryAria": "Check again",
+    "retry": "Check again",
+    "contactStaff": "Contact staff"
+  },
+  "PreloadPopup": {
+    "processing": "Processing",
+    "loadingData": "Loading data...",
+    "pleaseWait": "Please wait a moment"
+  },
+  "ReceiptSuccessPopup": {
+    "title": "Payment successful",
+    "printReceipt": "Print receipt",
+    "takeReceipt": "Please take your receipt",
+    "thankYou": "Thank you for using our service",
+    "finish": "Finish"
+  },
+  "PreloadPage": {
+    "loadingData": "Loading data...",
+    "loadedSuccess": "Loaded successfully",
+    "loadFailed": "Failed to load data",
+    "loadingFromApi": "Loading data from API"
+  }
+}

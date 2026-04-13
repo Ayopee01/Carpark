@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import "@/src/app/css/PreloadPopup.css";
-//import components
 import Navbar from "./components/Navbar";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,16 +24,20 @@ export const metadata: Metadata = {
   description: "Carpark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className={`${inter.variable} ${notoThai.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${notoThai.variable}`}>
       <body>
-        <Navbar />
-        {children}
+        <NextIntlClientProvider>
+          <Navbar />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

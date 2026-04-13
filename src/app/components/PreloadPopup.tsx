@@ -2,6 +2,7 @@
 
 import { FaCar } from "react-icons/fa6";
 import { RiLoopRightFill } from "react-icons/ri";
+import { useTranslations } from "next-intl";
 
 type PreloadPopupProps = {
   statusText?: string;
@@ -9,18 +10,19 @@ type PreloadPopupProps = {
   progress?: number;
 };
 
-export default function PreloadPopup({
-  statusText = "กำลังประมวลผล",
-  title = "กำลังโหลดข้อมูล...",
+function PreloadPopup({
+  statusText,
+  title,
   progress = 0,
 }: PreloadPopupProps) {
+  const t = useTranslations("PreloadPopup");
   const safeProgress = Math.max(0, Math.min(progress, 100));
 
   return (
     <div className="plate-popup__preload">
       <div className="plate-popup__preload-status">
         <span className="plate-popup__preload-status-dot" />
-        <span>{statusText}</span>
+        <span>{statusText ?? t("processing")}</span>
       </div>
 
       <div className="plate-popup__preload-body">
@@ -45,8 +47,8 @@ export default function PreloadPopup({
             </div>
           </div>
 
-          <h2 className="plate-popup__preload-title">{title}</h2>
-          <p className="plate-popup__preload-subtext">กรุณารอสักครู่</p>
+          <h2 className="plate-popup__preload-title">{title ?? t("loadingData")}</h2>
+          <p className="plate-popup__preload-subtext">{t("pleaseWait")}</p>
         </div>
 
         <div className="plate-popup__preload-progress-track">
@@ -59,3 +61,5 @@ export default function PreloadPopup({
     </div>
   );
 }
+
+export default PreloadPopup;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FiXCircle } from "react-icons/fi";
 import { BsQrCodeScan } from "react-icons/bs";
+import { useLocale, useTranslations } from "next-intl";
 import "@/src/app/css/PaymentPopup.css";
 
 type PaymentPopupProps = {
@@ -16,11 +17,14 @@ type PaymentPopupContentProps = {
   amount: number;
 };
 
-function PaymentPopupContent({
-  onClose,
-  amount,
-}: PaymentPopupContentProps) {
+function PaymentPopupContent({ onClose, amount }: PaymentPopupContentProps) {
   const [timeLeft, setTimeLeft] = useState(60);
+  const t = useTranslations("PaymentPopup");
+  const common = useTranslations("Common");
+  const locale = useLocale();
+
+  const numberLocale =
+    locale === "en" ? "en-US" : locale === "zh" ? "zh-CN" : "th-TH";
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -66,14 +70,14 @@ function PaymentPopupContent({
       >
         <div className="payment-popup__header">
           <span className="payment-popup__dot" />
-          <h2 id="payment-popup-title">ชำระค่าบริการ</h2>
+          <h2 id="payment-popup-title">{t("title")}</h2>
         </div>
 
         <div className="payment-popup__card">
           <div className="payment-popup__brand">
             <div className="payment-popup__brand-icon">P</div>
-            <h3>Smart Carpark</h3>
-            <p>การชำระค่าบริการ</p>
+            <h3>{common("smartCarpark")}</h3>
+            <p>{common("paymentService")}</p>
             <strong>PromptPay</strong>
           </div>
 
@@ -83,15 +87,15 @@ function PaymentPopupContent({
             </div>
 
             <div className="payment-popup__amount">
-              {amount.toLocaleString("th-TH")}
+              {amount.toLocaleString(numberLocale)}
             </div>
-            <div className="payment-popup__currency">บาท</div>
-            <p className="payment-popup__caption">สแกนเพื่อชำระค่าบริการ</p>
+            <div className="payment-popup__currency">{common("baht")}</div>
+            <p className="payment-popup__caption">{t("caption")}</p>
           </div>
         </div>
 
         <div className="payment-popup__countdown">
-          กรุณาชำระเงินภายใน <strong>{timeLeft}</strong> วินาที
+          {t("payWithin")} <strong>{timeLeft}</strong> {common("seconds")}
         </div>
 
         <button
@@ -100,20 +104,15 @@ function PaymentPopupContent({
           onClick={onClose}
         >
           <FiXCircle />
-          <span>ยกเลิก</span>
+          <span>{t("cancel")}</span>
         </button>
       </div>
     </div>
   );
 }
 
-function PaymentPopup({
-  open,
-  onClose,
-  amount = 80,
-}: PaymentPopupProps) {
+function PaymentPopup({ open, onClose, amount = 80 }: PaymentPopupProps) {
   if (!open) return null;
-
   return <PaymentPopupContent onClose={onClose} amount={amount} />;
 }
 

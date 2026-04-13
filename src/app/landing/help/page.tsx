@@ -1,13 +1,13 @@
 "use client";
 
-// icons
 import { FiPhoneCall } from "react-icons/fi";
-// import component
+import { useTranslations } from "next-intl";
 import BackBtn from "@/src/app/components/BackBtn";
-// import css
 import "@/src/app/css/Help.css";
 
 function Help() {
+  const t = useTranslations("Help");
+
   return (
     <section className="help-page">
       <div className="help-page__back">
@@ -16,16 +16,16 @@ function Help() {
 
       <div className="help-page__content">
         <div className="help-page__hero">
-          <h1 className="help-page__title">Smart Carpark Support</h1>
-          <h3 className="help-page__subtitle">Concierge</h3>
+          <h1 className="help-page__title">{t("title")}</h1>
+          <h3 className="help-page__subtitle">{t("subtitle")}</h3>
           <p className="help-page__desc">
-            We’re here to ensure your parking experience
+            {t("descLine1")}
             <br />
-            is as seamless as your drive.
+            {t("descLine2")}
           </p>
         </div>
 
-        <div className="help-page__contact-title">Help/Contact Staff</div>
+        <div className="help-page__contact-title">{t("contactTitle")}</div>
 
         <a href="tel:+66123123456" className="help-card">
           <span className="help-card__icon">
@@ -34,7 +34,7 @@ function Help() {
 
           <span className="help-card__text">
             <strong>+66-123xxxxxx</strong>
-            <small>ติดต่อเจ้าหน้าที่</small>
+            <small>{t("contactStaff")}</small>
           </span>
         </a>
       </div>

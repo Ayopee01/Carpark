@@ -1,178 +1,320 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import { FiDelete } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import "@/src/app/css/Preload.css";
+import { useTranslations } from "next-intl";
+import BackBtn from "@/src/app/components/BackBtn";
+import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
+import PreloadPopup from "@/src/app/components/PreloadPopup";
+import type { KeyboardItem, PlateSearchResponse } from "@/src/app/type/search";
+import "@/src/app/css/Search.css";
 
-type LoadState = "loading" | "success" | "error";
+type FetchPlateWithProgressResult = {
+  status: number;
+  result: PlateSearchResponse | null;
+};
 
-async function fetchWithProgress<T>(
-    url: string,
-    onProgress: (percent: number | null) => void,
-    init?: RequestInit
-): Promise<T> {
-    const response = await fetch(url, {
-        ...init,
-        cache: "no-store",
-    });
+const keyboardRows: KeyboardItem[][] = [
+  [
+    { type: "key", value: "1" },
+    { type: "key", value: "6" },
+    { type: "key", value: "ก" },
+    { type: "key", value: "ข" },
+    { type: "key", value: "ค" },
+    { type: "key", value: "ง" },
+    { type: "key", value: "จ" },
+    { type: "key", value: "ฉ" },
+    { type: "key", value: "ช" },
+    { type: "key", value: "ซ" },
+    { type: "key", value: "ญ" }
+  ],
+  [
+    { type: "key", value: "2" },
+    { type: "key", value: "7" },
+    { type: "key", value: "ฎ" },
+    { type: "key", value: "ฏ" },
+    { type: "key", value: "ฐ" },
+    { type: "key", value: "ณ" },
+    { type: "key", value: "ด" },
+    { type: "key", value: "ต" },
+    { type: "key", value: "ถ" },
+    { type: "key", value: "ท" },
+    { type: "key", value: "ธ" }
+  ],
+  [
+    { type: "key", value: "3" },
+    { type: "key", value: "8" },
+    { type: "key", value: "น" },
+    { type: "key", value: "บ" },
+    { type: "key", value: "ป" },
+    { type: "key", value: "ผ" },
+    { type: "key", value: "ฝ" },
+    { type: "key", value: "พ" },
+    { type: "key", value: "ฟ" },
+    { type: "key", value: "ภ" },
+    { type: "key", value: "ม" }
+  ],
+  [
+    { type: "key", value: "4" },
+    { type: "key", value: "9" },
+    { type: "key", value: "ย" },
+    { type: "key", value: "ร" },
+    { type: "key", value: "ล" },
+    { type: "key", value: "ว" },
+    { type: "key", value: "ศ" },
+    { type: "key", value: "ษ" },
+    { type: "key", value: "ส" },
+    { type: "delete" }
+  ],
+  [
+    { type: "key", value: "5" },
+    { type: "key", value: "0" },
+    { type: "key", value: "ห" },
+    { type: "key", value: "อ" },
+    { type: "key", value: "ฮ" },
+    { type: "confirm", label: "confirm" }
+  ]
+];
 
-    if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+async function fetchPlateWithProgress(
+  url: string,
+  onProgress: (value: number) => void
+): Promise<FetchPlateWithProgressResult> {
+  onProgress(0);
+
+  const res = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!res.body) {
+    const result = (await res.json().catch(() => null)) as PlateSearchResponse | null;
+    onProgress(100);
+
+    return {
+      status: res.status,
+      result,
+    };
+  }
+
+  const total = Number(res.headers.get("content-length") ?? 0);
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+
+  let received = 0;
+  let text = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) break;
+    if (!value) continue;
+
+    received += value.byteLength;
+    text += decoder.decode(value, { stream: true });
+
+    if (total > 0) {
+      const percent = Math.round((received / total) * 100);
+      onProgress(Math.min(percent, 100));
     }
+  }
 
-    if (!response.body) {
-        onProgress(null);
-        return response.json();
-    }
+  text += decoder.decode();
 
-    const totalHeader = response.headers.get("content-length");
-    const totalBytes = totalHeader ? Number(totalHeader) : 0;
+  let result: PlateSearchResponse | null = null;
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let receivedBytes = 0;
-    let resultText = "";
+  try {
+    result = text ? (JSON.parse(text) as PlateSearchResponse) : null;
+  } catch {
+    result = null;
+  }
 
-    while (true) {
-        const { done, value } = await reader.read();
+  onProgress(100);
 
-        if (done) break;
-
-        if (value) {
-            receivedBytes += value.length;
-            resultText += decoder.decode(value, { stream: true });
-
-            if (totalBytes > 0) {
-                const percent = Math.min(
-                    100,
-                    Math.round((receivedBytes / totalBytes) * 100)
-                );
-                onProgress(percent);
-            } else {
-                onProgress(null);
-            }
-        }
-    }
-
-    resultText += decoder.decode();
-
-    if (totalBytes > 0) {
-        onProgress(100);
-    }
-
-    return JSON.parse(resultText) as T;
+  return {
+    status: res.status,
+    result,
+  };
 }
 
-function PreloadPage() {
-    const router = useRouter();
-    const [progress, setProgress] = useState<number | null>(0);
-    const [status, setStatus] = useState<LoadState>("loading");
-    const [message, setMessage] = useState("กำลังโหลดข้อมูล...");
-    const [dotCount, setDotCount] = useState(1);
+function SearchPage() {
+  const router = useRouter();
+  const t = useTranslations("Search");
 
-    useEffect(() => {
-        const dotTimer = window.setInterval(() => {
-            setDotCount((prev) => (prev >= 4 ? 1 : prev + 1));
-        }, 350);
+  const [progress, setProgress] = useState(0);
+  const [plate, setPlate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
 
-        return () => window.clearInterval(dotTimer);
-    }, []);
+  const handleKeyClick = (key: string) => {
+    if (loading) return;
+    setPlate((prev) => `${prev}${key}`);
+    setError("");
+  };
 
-    useEffect(() => {
-        let isMounted = true;
+  const handleDelete = () => {
+    if (loading) return;
+    setPlate((prev) => prev.slice(0, -1));
+    setError("");
+  };
 
-        const loadData = async () => {
-            try {
-                setStatus("loading");
-                setMessage("กำลังโหลดข้อมูล...");
+  const handleConfirm = async () => {
+    const trimmedPlate = plate.trim();
 
-                const data = await fetchWithProgress(
-                    "/api/dashboard",
-                    (percent) => {
-                        if (!isMounted) return;
-                        setProgress(percent);
-                    },
-                    {
-                        headers: {
-                            Accept: "application/json",
-                        },
-                    }
-                );
+    if (!trimmedPlate) {
+      setError(t("errorRequired"));
+      return;
+    }
 
-                console.log("loaded:", data);
+    setLoading(true);
+    setProgress(0);
+    setError("");
+    setShowNotFoundPopup(false);
 
-                if (!isMounted) return;
+    try {
+      const { status, result } = await fetchPlateWithProgress(
+        `/api/mockdata?plate=${encodeURIComponent(trimmedPlate)}`,
+        setProgress
+      );
 
-                setProgress(100);
-                setStatus("success");
-                setMessage("โหลดสำเร็จ");
+      if (!result) {
+        setError(t("errorInvalidData"));
+        setProgress(100);
+        await wait(120);
+        return;
+      }
 
-                window.setTimeout(() => {
-                    router.push("/dashboard");
-                }, 500);
-            } catch (error) {
-                console.error(error);
+      if (status === 404) {
+        setProgress(100);
+        await wait(120);
+        setShowNotFoundPopup(true);
+        return;
+      }
 
-                if (!isMounted) return;
+      if (!result.ok) {
+        setError(result.message || t("errorSearchFailed"));
+        setProgress(100);
+        await wait(120);
+        return;
+      }
 
-                setStatus("error");
-                setMessage("โหลดข้อมูลไม่สำเร็จ");
-            }
-        };
+      sessionStorage.setItem("searchedPlate", trimmedPlate);
+      sessionStorage.setItem("plateDetailData", JSON.stringify(result.data));
 
-        loadData();
+      setProgress(100);
+      await wait(120);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [router]);
+      router.push(`/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`);
+    } catch (err: unknown) {
+      console.error("unexpected search error:", err);
+      setError(t("errorUnexpected"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const dots = useMemo(() => ".".repeat(dotCount), [dotCount]);
+  return (
+    <>
+      <section className="search-page">
+        <div className="search-page__content">
+          <div className="search-page__back">
+            <BackBtn />
+          </div>
 
-    return (
-        <section className="preload-page">
-            <div className="preload-page__content">
-                <div className="preload-logo">P</div>
+          <div className="search-page__header">
+            <h1>Smart Carpark</h1>
+            <p>{t("subtitle")}</p>
+          </div>
 
-                <h1 className="preload-title">Smart Carpark</h1>
-
-                <div
-                    className={`preload-bar ${progress === null ? "preload-bar--indeterminate" : ""
-                        }`}
-                    aria-label="loading progress"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={progress ?? undefined}
-                    role="progressbar"
-                >
-                    <div
-                        className="preload-bar__fill"
-                        style={{
-                            width: progress === null ? "45%" : `${progress}%`,
-                        }}
-                    />
-                </div>
-
-                <div className="preload-text-wrap">
-                    {status === "loading" ? (
-                        <>
-                            <p className="preload-dots">{dots}</p>
-                            <p className="preload-message">
-                                {progress === null ? "กำลังโหลดข้อมูลจาก API" : `${progress}%`}
-                            </p>
-                        </>
-                    ) : (
-                        <p
-                            className={`preload-message ${status === "error" ? "is-error" : "is-success"
-                                }`}
-                        >
-                            {message}
-                        </p>
-                    )}
-                </div>
+          <div className="search-page__hint">
+            <div className="plate-card">
+              <span className="plate-card__label">{t("plateLabel")}</span>
+              <div className={`plate-card__display ${plate ? "is-filled" : ""}`}>
+                {plate || t("platePlaceholder")}
+              </div>
             </div>
-        </section>
-    );
+            <p>{t("subtitle")}</p>
+
+            {error ? <p className="search-page__error">{error}</p> : null}
+          </div>
+
+          <div className="plate-keyboard-container">
+            <div className="plate-keyboard">
+              {keyboardRows.map((row, rowIndex) =>
+                row.map((item, itemIndex) => {
+                  if (item.type === "key") {
+                    return (
+                      <button
+                        key={`${rowIndex}-${itemIndex}-${item.value}`}
+                        type="button"
+                        className="plate-keyboard__key"
+                        onClick={() => handleKeyClick(item.value)}
+                        disabled={loading}
+                      >
+                        {item.value}
+                      </button>
+                    );
+                  }
+
+                  if (item.type === "delete") {
+                    return (
+                      <button
+                        key={`${rowIndex}-${itemIndex}-delete`}
+                        type="button"
+                        className="plate-keyboard__action plate-keyboard__action--delete"
+                        onClick={handleDelete}
+                        aria-label="delete"
+                        disabled={loading}
+                      >
+                        <FiDelete />
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={`${rowIndex}-${itemIndex}-confirm`}
+                      type="button"
+                      className="plate-keyboard__action plate-keyboard__action--confirm"
+                      onClick={handleConfirm}
+                      disabled={loading}
+                    >
+                      {loading ? t("loadingButton") : t("confirm")}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {loading ? (
+        <div className="plate-popup__overlay">
+          <div className="plate-popup">
+            <div className="plate-popup__top">
+              <PreloadPopup
+                statusText={t("processing")}
+                title={t("loadingData")}
+                progress={progress}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <PlateNotFoundPopup
+        open={showNotFoundPopup}
+        onClose={() => setShowNotFoundPopup(false)}
+        onRetry={() => setShowNotFoundPopup(false)}
+      />
+    </>
+  );
 }
 
-export default PreloadPage;
+export default SearchPage;

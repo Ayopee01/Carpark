@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FiPhoneCall } from "react-icons/fi";
 import { FaCheck } from "react-icons/fa";
+import { useTranslations } from "next-intl";
 import BackBtn from "@/src/app/components/BackBtn";
 import PaymentPopup from "@/src/app/components/PaymentPopup";
 import "@/src/app/css/Detail.css";
@@ -22,6 +23,9 @@ type DetailData = {
 function DetailPage() {
     const searchParams = useSearchParams();
     const plate = searchParams.get("plate") ?? "";
+
+    const t = useTranslations("Detail");
+    const common = useTranslations("Common");
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [data, setData] = useState<DetailData | null>(null);
@@ -50,7 +54,7 @@ function DetailPage() {
                 if (!res.ok || !result.ok) {
                     setResolvedPlate(plate);
                     setData(null);
-                    setFetchError("ไม่พบข้อมูลทะเบียนนี้");
+                    setFetchError(t("errorPlateNotFound"));
                     return;
                 }
 
@@ -62,7 +66,7 @@ function DetailPage() {
 
                 setResolvedPlate(plate);
                 setData(null);
-                setFetchError("โหลดข้อมูลไม่สำเร็จ");
+                setFetchError(t("errorLoadFailed"));
             }
         };
 
@@ -71,11 +75,11 @@ function DetailPage() {
         return () => {
             cancelled = true;
         };
-    }, [plate]);
+    }, [plate, t]);
 
     const currentData = resolvedPlate === plate ? data : null;
     const error = !plate
-        ? "ไม่พบเลขทะเบียน"
+        ? t("errorNoPlate")
         : resolvedPlate === plate
             ? fetchError
             : "";
@@ -91,12 +95,12 @@ function DetailPage() {
 
                 <div className="detail-page__content">
                     <header className="detail-page__header">
-                        <h1>ค้นหาเลขทะเบียน</h1>
-                        <p>รายละเอียดเพิ่มเติม</p>
+                        <h1>{t("title")}</h1>
+                        <p>{t("subtitle")}</p>
                     </header>
 
                     <div className="detail-plate-card">
-                        <span className="detail-plate-card__label">เลขทะเบียน :</span>
+                        <span className="detail-plate-card__label">{t("plateLabel")}</span>
 
                         <div className="detail-plate-card__input">
                             <span className="detail-plate-card__value">{plateValue}</span>
@@ -110,30 +114,30 @@ function DetailPage() {
                         </div>
                     </div>
 
-                    <div className="detail-section-title">รายละเอียดเพิ่มเติม</div>
+                    <div className="detail-section-title">{t("sectionTitle")}</div>
 
                     {error ? <div className="detail-error">{error}</div> : null}
 
                     <div className="detail-info-grid">
                         <div className="detail-info-card">
-                            <span className="detail-info-card__label">วัน/เดือน/ปี :</span>
+                            <span className="detail-info-card__label">{t("dateLabel")}</span>
                             <strong>{currentData?.date || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card">
-                            <span className="detail-info-card__label">เวลาเข้า :</span>
+                            <span className="detail-info-card__label">{t("entryTimeLabel")}</span>
                             <strong>{currentData?.entryTime || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card">
-                            <span className="detail-info-card__label">เวลาที่ใช้บริการ :</span>
+                            <span className="detail-info-card__label">{t("durationLabel")}</span>
                             <strong>{currentData?.duration || "-"}</strong>
                         </div>
 
                         <div className="detail-info-card detail-info-card--fee">
                             <div className="detail-info-card__fee-left">
                                 <span className="detail-info-card__label">
-                                    สถานะการชำระค่าบริการ :
+                                    {t("paymentStatusLabel")}
                                 </span>
                                 <strong className="detail-info-card__danger">
                                     {currentData?.paymentStatus || "-"}
@@ -141,20 +145,20 @@ function DetailPage() {
                             </div>
 
                             <div className="detail-fee-box">
-                                <span>ค่าบริการ</span>
+                                <span>{t("serviceFee")}</span>
                                 <strong>
-                                    {currentData?.amount != null ? `${currentData.amount} บาท` : "-"}
+                                    {currentData?.amount != null
+                                        ? `${currentData.amount} ${common("baht")}`
+                                        : "-"}
                                 </strong>
                             </div>
                         </div>
                     </div>
 
                     <div className="payment-panel">
-                        <h2>ช่องทางการชำระค่าบริการ</h2>
+                        <h2>{t("paymentChannels")}</h2>
 
-                        <p className="payment-panel__note">
-                            ***เมื่อชำระค่าบริการเรียบร้อยแล้วจะต้องออกจากที่จอดรถภายในเวลา 15 นาที***
-                        </p>
+                        <p className="payment-panel__note">{t("paymentNote")}</p>
 
                         <div className="payment-card">
                             <div className="payment-card__top">
@@ -168,7 +172,7 @@ function DetailPage() {
 
                             <div className="payment-card__body">
                                 <h3>{currentData?.paymentMethod || "-"}</h3>
-                                <p>ค้นหาทะเบียนรถ</p>
+                                <p>{t("searchLicensePlate")}</p>
                             </div>
 
                             <button
@@ -177,16 +181,16 @@ function DetailPage() {
                                 onClick={() => setIsPopupOpen(true)}
                                 disabled={!currentData}
                             >
-                                ดำเนินการต่อ
+                                {common("continue")}
                             </button>
                         </div>
 
                         <div className="payment-panel__help">
-                            <span>มีปัญหาในการชำระเงิน?</span>
+                            <span>{t("paymentProblem")}</span>
 
                             <a href="tel:+66123123456">
                                 <FiPhoneCall />
-                                <span>ติดต่อเจ้าหน้าที่</span>
+                                <span>{common("contactStaff")}</span>
                             </a>
                         </div>
                     </div>

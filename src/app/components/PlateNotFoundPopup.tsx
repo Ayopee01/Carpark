@@ -1,6 +1,7 @@
 "use client";
 
 import { FiRefreshCw, FiHeadphones } from "react-icons/fi";
+import { useTranslations } from "next-intl";
 import "@/src/app/css/PlateNotFoundPopup.css";
 
 type PlateNotFoundPopupProps = {
@@ -14,6 +15,8 @@ function PlateNotFoundPopup({
     onClose,
     onRetry,
 }: PlateNotFoundPopupProps) {
+    const t = useTranslations("PlateNotFoundPopup");
+
     if (!open) return null;
 
     return (
@@ -27,12 +30,12 @@ function PlateNotFoundPopup({
             >
                 <div className="plate-popup__top">
                     <span className="plate-popup__dot" />
-                    <span className="plate-popup__top-text">ลองอีกครั้ง</span>
+                    <span className="plate-popup__top-text">{t("topText")}</span>
                 </div>
 
                 <div className="plate-popup__card">
                     <h2 id="plate-popup-title" className="plate-popup__title">
-                        ไม่พบเลขทะเบียน
+                        {t("title")}
                     </h2>
 
                     <div className="plate-popup__icon-wrap">
@@ -40,7 +43,7 @@ function PlateNotFoundPopup({
                             type="button"
                             className="plate-popup__icon-btn"
                             onClick={onRetry}
-                            aria-label="ตรวจสอบอีกครั้ง"
+                            aria-label={t("retryAria")}
                         >
                             <FiRefreshCw />
                         </button>
@@ -51,7 +54,7 @@ function PlateNotFoundPopup({
                         className="plate-popup__retry-btn"
                         onClick={onRetry}
                     >
-                        ตรวจสอบอีกครั้ง
+                        {t("retry")}
                     </button>
 
                     <div className="plate-popup__divider" />
@@ -62,7 +65,7 @@ function PlateNotFoundPopup({
                         onClick={onClose}
                     >
                         <FiHeadphones />
-                        <span>ติดต่อเจ้าหน้าที่</span>
+                        <span>{t("contactStaff")}</span>
                     </button>
                 </div>
             </div>

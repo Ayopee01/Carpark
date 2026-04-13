@@ -1,0 +1,106 @@
+{
+  "Common": {
+    "back": "返回",
+    "contactStaff": "联系工作人员",
+    "continue": "继续",
+    "cancel": "取消",
+    "smartCarpark": "Smart Carpark",
+    "paymentService": "服务支付",
+    "baht": "泰铢",
+    "seconds": "秒",
+    "pleaseWait": "请稍候"
+  },
+  "SideMenu": {
+    "help": "帮助",
+    "thai": "泰语",
+    "english": "英语",
+    "chinese": "中文"
+  },
+  "Navbar": {
+    "customerSubtitle": "客户",
+    "help": "帮助"
+  },
+  "Dashboard": {
+    "welcome": "欢迎",
+    "description": "这是一套完整的停车缴费自助终端系统，可帮助用户方便、快速地查询信息、查看详情并完成支付。",
+    "scanTitle": "Scan Receipt QR",
+    "scanSubtitle": "扫描收据二维码",
+    "searchTitle": "Search License Plate",
+    "searchSubtitle": "搜索车牌号"
+  },
+  "Help": {
+    "title": "Smart Carpark Support",
+    "subtitle": "Concierge",
+    "descLine1": "We’re here to ensure your parking experience",
+    "descLine2": "is as seamless as your drive.",
+    "contactTitle": "帮助 / 联系工作人员",
+    "contactStaff": "联系工作人员"
+  },
+  "Scan": {
+    "subtitle": "扫描以搜索车牌号",
+    "hintLine1": "请将车牌或二维码放置在",
+    "hintLine2": "框内进行扫描"
+  },
+  "Search": {
+    "subtitle": "请输入您的车牌号",
+    "plateLabel": "车牌号",
+    "platePlaceholder": "ABC 1234",
+    "errorRequired": "请输入车牌号",
+    "errorInvalidData": "数据格式无效",
+    "errorSearchFailed": "搜索失败",
+    "errorUnexpected": "发生未知错误",
+    "confirm": "确认",
+    "loadingButton": "加载中...",
+    "processing": "处理中",
+    "loadingData": "正在加载数据..."
+  },
+  "Detail": {
+    "title": "搜索车牌号",
+    "subtitle": "详细信息",
+    "plateLabel": "车牌号 :",
+    "sectionTitle": "详细信息",
+    "dateLabel": "日期 :",
+    "entryTimeLabel": "入场时间 :",
+    "durationLabel": "使用时长 :",
+    "paymentStatusLabel": "付款状态 :",
+    "serviceFee": "服务费",
+    "paymentChannels": "支付方式",
+    "paymentNote": "***付款完成后，请在 15 分钟内离开停车场***",
+    "searchLicensePlate": "搜索车牌号",
+    "paymentProblem": "付款时遇到问题？",
+    "errorNoPlate": "未找到车牌号",
+    "errorPlateNotFound": "未找到该车牌信息",
+    "errorLoadFailed": "加载数据失败"
+  },
+  "PaymentPopup": {
+    "title": "支付",
+    "caption": "扫描付款",
+    "payWithin": "请在以下时间内完成支付",
+    "cancel": "取消"
+  },
+  "PlateNotFoundPopup": {
+    "topText": "再试一次",
+    "title": "未找到车牌",
+    "retryAria": "再次检查",
+    "retry": "再次检查",
+    "contactStaff": "联系工作人员"
+  },
+  "PreloadPopup": {
+    "processing": "处理中",
+    "loadingData": "正在加载数据...",
+    "pleaseWait": "请稍候"
+  },
+  "ReceiptSuccessPopup": {
+    "title": "支付成功",
+    "printReceipt": "打印收据",
+    "takeReceipt": "请取走收据",
+    "thankYou": "感谢您的使用",
+    "finish": "完成"
+  },
+  "PreloadPage": {
+    "loadingData": "正在加载数据...",
+    "loadedSuccess": "加载成功",
+    "loadFailed": "加载失败",
+    "loadingFromApi": "正在从 API 加载数据"
+  }
+}

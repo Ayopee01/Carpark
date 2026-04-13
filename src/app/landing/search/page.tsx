@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
 import { FiDelete } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import BackBtn from "@/src/app/components/BackBtn";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
@@ -26,7 +32,7 @@ const keyboardRows: KeyboardItem[][] = [
     { type: "key", value: "ฉ" },
     { type: "key", value: "ช" },
     { type: "key", value: "ซ" },
-    { type: "key", value: "ญ" },
+    { type: "key", value: "ญ" }
   ],
   [
     { type: "key", value: "2" },
@@ -39,7 +45,7 @@ const keyboardRows: KeyboardItem[][] = [
     { type: "key", value: "ต" },
     { type: "key", value: "ถ" },
     { type: "key", value: "ท" },
-    { type: "key", value: "ธ" },
+    { type: "key", value: "ธ" }
   ],
   [
     { type: "key", value: "3" },
@@ -52,7 +58,7 @@ const keyboardRows: KeyboardItem[][] = [
     { type: "key", value: "พ" },
     { type: "key", value: "ฟ" },
     { type: "key", value: "ภ" },
-    { type: "key", value: "ม" },
+    { type: "key", value: "ม" }
   ],
   [
     { type: "key", value: "4" },
@@ -64,7 +70,7 @@ const keyboardRows: KeyboardItem[][] = [
     { type: "key", value: "ศ" },
     { type: "key", value: "ษ" },
     { type: "key", value: "ส" },
-    { type: "delete" },
+    { type: "delete" }
   ],
   [
     { type: "key", value: "5" },
@@ -72,8 +78,8 @@ const keyboardRows: KeyboardItem[][] = [
     { type: "key", value: "ห" },
     { type: "key", value: "อ" },
     { type: "key", value: "ฮ" },
-    { type: "confirm", label: "confirm" },
-  ],
+    { type: "confirm", label: "confirm" }
+  ]
 ];
 
 const wait = (ms: number) =>
@@ -142,11 +148,30 @@ async function fetchPlateWithProgress(
 
 function SearchPage() {
   const router = useRouter();
+  const t = useTranslations("Search");
+
   const [progress, setProgress] = useState(0);
   const [plate, setPlate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
+  const [allowBrowserInput, setAllowBrowserInput] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+
+    const updateInputMode = (event?: MediaQueryListEvent) => {
+      setAllowBrowserInput(event ? event.matches : mediaQuery.matches);
+    };
+
+    updateInputMode();
+
+    mediaQuery.addEventListener("change", updateInputMode);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateInputMode);
+    };
+  }, []);
 
   const handleKeyClick = (key: string) => {
     if (loading) return;
@@ -160,11 +185,26 @@ function SearchPage() {
     setError("");
   };
 
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (loading || !allowBrowserInput) return;
+    setPlate(event.target.value);
+    setError("");
+  };
+
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!allowBrowserInput) return;
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleConfirm();
+    }
+  };
+
   const handleConfirm = async () => {
     const trimmedPlate = plate.trim();
 
     if (!trimmedPlate) {
-      setError("กรุณากรอกเลขทะเบียนรถ");
+      setError(t("errorRequired"));
       return;
     }
 
@@ -180,7 +220,7 @@ function SearchPage() {
       );
 
       if (!result) {
-        setError("รูปแบบข้อมูลไม่ถูกต้อง");
+        setError(t("errorInvalidData"));
         setProgress(100);
         await wait(120);
         return;
@@ -194,7 +234,7 @@ function SearchPage() {
       }
 
       if (!result.ok) {
-        setError(result.message || "ค้นหาข้อมูลไม่สำเร็จ");
+        setError(result.message || t("errorSearchFailed"));
         setProgress(100);
         await wait(120);
         return;
@@ -209,7 +249,7 @@ function SearchPage() {
       router.push(`/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`);
     } catch (err: unknown) {
       console.error("unexpected search error:", err);
-      setError("เกิดข้อผิดพลาดบางอย่าง");
+      setError(t("errorUnexpected"));
     } finally {
       setLoading(false);
     }
@@ -225,17 +265,31 @@ function SearchPage() {
 
           <div className="search-page__header">
             <h1>Smart Carpark</h1>
-            <p>กรอกข้อมูลเลขทะเบียนรถของคุณ</p>
+            <p>{t("subtitle")}</p>
           </div>
 
           <div className="search-page__hint">
             <div className="plate-card">
-              <span className="plate-card__label">ระบุเลขทะเบียนรถ</span>
-              <div className={`plate-card__display ${plate ? "is-filled" : ""}`}>
-                {plate || "1กข 1234"}
-              </div>
+              <span className="plate-card__label">{t("plateLabel")}</span>
+              <input
+                type="text"
+                className={`plate-card__input ${plate ? "is-filled" : ""} ${!allowBrowserInput ? "is-readonly" : ""}`}
+                value={plate}
+                onChange={handleInputChange}
+                onKeyDown={handleInputKeyDown}
+                placeholder={t("platePlaceholder")}
+                aria-label={t("plateLabel")}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                inputMode="text"
+                enterKeyHint="search"
+                readOnly={!allowBrowserInput}
+                disabled={loading}
+              />
             </div>
-            <p>กรุณากรอกข้อมูลเลขทะเบียนรถของคุณ</p>
+            <p>{t("subtitle")}</p>
 
             {error ? <p className="search-page__error">{error}</p> : null}
           </div>
@@ -265,7 +319,7 @@ function SearchPage() {
                         type="button"
                         className="plate-keyboard__action plate-keyboard__action--delete"
                         onClick={handleDelete}
-                        aria-label="ลบ"
+                        aria-label="delete"
                         disabled={loading}
                       >
                         <FiDelete />
@@ -281,7 +335,7 @@ function SearchPage() {
                       onClick={handleConfirm}
                       disabled={loading}
                     >
-                      {loading ? "loading..." : item.label}
+                      {loading ? t("loadingButton") : t("confirm")}
                     </button>
                   );
                 })
@@ -296,8 +350,8 @@ function SearchPage() {
           <div className="plate-popup">
             <div className="plate-popup__top">
               <PreloadPopup
-                statusText="กำลังประมวลผล"
-                title="กำลังโหลดข้อมูล..."
+                statusText={t("processing")}
+                title={t("loadingData")}
                 progress={progress}
               />
             </div>
