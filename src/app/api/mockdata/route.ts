@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import type {
-  PlateDetail,
-  PlateSearchNotFoundResponse,
-  PlateSearchSuccessResponse,
-} from "@/src/app/type/search";
+// Types
+import type { PlateDetail, PlateSearchNotFoundResponse, PlateSearchSuccessResponse } from "@/src/app/type/search";
 
+// ------------------------------- Types -------------------------------
 type MockPlateRecord = {
   plateNo: string;
   province: string;
@@ -14,8 +12,10 @@ type MockPlateRecord = {
   paymentMethod: string;
 };
 
+// ------------------------------- Config -------------------------------
 const ADMIN_HOURLY_RATE = 20;
 
+// ------------------------------- Mock Data -------------------------------
 const mockPlates: MockPlateRecord[] = [
   {
     plateNo: "1กข1234",
@@ -35,6 +35,7 @@ const mockPlates: MockPlateRecord[] = [
   },
 ];
 
+// ------------------------------- Function -------------------------------
 const normalizePlate = (value: string) => value.replace(/\s+/g, "").trim();
 
 function buildEntryDate(date: string, entryTime: string): Date {
@@ -99,6 +100,7 @@ function mapMockToPlateDetail(
   };
 }
 
+// ------------------------------- API Route Handler -------------------------------
 export async function GET(req: NextRequest) {
   const plate = req.nextUrl.searchParams.get("plate")?.trim();
 

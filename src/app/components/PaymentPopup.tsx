@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+// Import Libraries
+import { useLocale, useTranslations } from "next-intl";
+// CSS
+import "@/src/app/css/PaymentPopup.css";
+// Icons
 import { FiXCircle } from "react-icons/fi";
 import { BsQrCodeScan } from "react-icons/bs";
-import { useLocale, useTranslations } from "next-intl";
-import "@/src/app/css/PaymentPopup.css";
 
+// ------------------------------- Types -------------------------------
 type PaymentPopupProps = {
   open: boolean;
   onClose: () => void;
@@ -17,6 +21,7 @@ type PaymentPopupContentProps = {
   amount: number;
 };
 
+// ------------------------------- Function -------------------------------
 function PaymentPopupContent({ onClose, amount }: PaymentPopupContentProps) {
   const [timeLeft, setTimeLeft] = useState(60);
   const t = useTranslations("PaymentPopup");
@@ -26,6 +31,7 @@ function PaymentPopupContent({ onClose, amount }: PaymentPopupContentProps) {
   const numberLocale =
     locale === "en" ? "en-US" : locale === "zh" ? "zh-CN" : "th-TH";
 
+  // ------------------------------- useEffect -------------------------------
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -59,6 +65,7 @@ function PaymentPopupContent({ onClose, amount }: PaymentPopupContentProps) {
     };
   }, [timeLeft, onClose]);
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <div className="payment-popup-overlay" onClick={onClose}>
       <div

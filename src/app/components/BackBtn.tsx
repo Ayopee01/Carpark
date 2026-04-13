@@ -1,10 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FiChevronLeft } from "react-icons/fi";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// CSS
 import "../css/BackBtn.css";
+// Icons
+import { FiChevronLeft } from "react-icons/fi";
 
+// ------------------------------- Function -------------------------------
 function BackBtn() {
   const router = useRouter();
   const t = useTranslations("Common");
@@ -17,6 +21,7 @@ function BackBtn() {
     }
   };
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <section>
       <button type="button" className="back-btn" onClick={handleBack}>

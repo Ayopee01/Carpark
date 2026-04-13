@@ -1,6 +1,6 @@
 "use client"
 
-// import component
+// Components
 import Dashboard from "./landing/dashboard/page";
 
 function Page() {

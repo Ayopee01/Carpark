@@ -1,15 +1,19 @@
 "use client";
 
+// Import Libraries
+import { useTranslations } from "next-intl";
+// Icons
 import { FaCar } from "react-icons/fa6";
 import { RiLoopRightFill } from "react-icons/ri";
-import { useTranslations } from "next-intl";
 
+// ------------------------------- Types -------------------------------
 type PreloadPopupProps = {
   statusText?: string;
   title?: string;
   progress?: number;
 };
 
+// ------------------------------- Function -------------------------------
 function PreloadPopup({
   statusText,
   title,
@@ -18,6 +22,7 @@ function PreloadPopup({
   const t = useTranslations("PreloadPopup");
   const safeProgress = Math.max(0, Math.min(progress, 100));
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <div className="plate-popup__preload">
       <div className="plate-popup__preload-status">

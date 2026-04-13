@@ -1,13 +1,19 @@
 "use client";
 
-import { MdOutlineQrCodeScanner } from "react-icons/md";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// Components
 import BackBtn from "@/src/app/components/BackBtn";
+// CSS
 import "@/src/app/css/Scan.css";
+// Icons
+import { MdOutlineQrCodeScanner } from "react-icons/md";
 
+// ------------------------------- Function -------------------------------
 function ScanPage() {
     const t = useTranslations("Scan");
 
+    // ----------------------------------- UI -----------------------------------
     return (
         <section className="scan-page">
             <div className="scan-page__back">

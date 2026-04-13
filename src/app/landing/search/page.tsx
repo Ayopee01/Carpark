@@ -1,151 +1,31 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type ChangeEvent,
-  type KeyboardEvent,
-} from "react";
-import { FiDelete } from "react-icons/fi";
+import { useState, type ChangeEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// Components
 import BackBtn from "@/src/app/components/BackBtn";
+import PlateKeyboard, { fetchPlateWithProgress, plateKeyboardRows } from "@/src/app/components/PlateKeyboard";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
-import type { KeyboardItem, PlateSearchResponse } from "@/src/app/type/search";
+// CSS
 import "@/src/app/css/Search.css";
 
-type FetchPlateWithProgressResult = {
-  status: number;
-  result: PlateSearchResponse | null;
-};
+// ------------------------------- Config -------------------------------
+const SEARCH_API_PATH = "/api/mockdata";
+const PRELOAD_DELAY_MS = 1200;
 
-const keyboardRows: KeyboardItem[][] = [
-  [
-    { type: "key", value: "1" },
-    { type: "key", value: "6" },
-    { type: "key", value: "ก" },
-    { type: "key", value: "ข" },
-    { type: "key", value: "ค" },
-    { type: "key", value: "ง" },
-    { type: "key", value: "จ" },
-    { type: "key", value: "ฉ" },
-    { type: "key", value: "ช" },
-    { type: "key", value: "ซ" },
-    { type: "key", value: "ญ" }
-  ],
-  [
-    { type: "key", value: "2" },
-    { type: "key", value: "7" },
-    { type: "key", value: "ฎ" },
-    { type: "key", value: "ฏ" },
-    { type: "key", value: "ฐ" },
-    { type: "key", value: "ณ" },
-    { type: "key", value: "ด" },
-    { type: "key", value: "ต" },
-    { type: "key", value: "ถ" },
-    { type: "key", value: "ท" },
-    { type: "key", value: "ธ" }
-  ],
-  [
-    { type: "key", value: "3" },
-    { type: "key", value: "8" },
-    { type: "key", value: "น" },
-    { type: "key", value: "บ" },
-    { type: "key", value: "ป" },
-    { type: "key", value: "ผ" },
-    { type: "key", value: "ฝ" },
-    { type: "key", value: "พ" },
-    { type: "key", value: "ฟ" },
-    { type: "key", value: "ภ" },
-    { type: "key", value: "ม" }
-  ],
-  [
-    { type: "key", value: "4" },
-    { type: "key", value: "9" },
-    { type: "key", value: "ย" },
-    { type: "key", value: "ร" },
-    { type: "key", value: "ล" },
-    { type: "key", value: "ว" },
-    { type: "key", value: "ศ" },
-    { type: "key", value: "ษ" },
-    { type: "key", value: "ส" },
-    { type: "delete" }
-  ],
-  [
-    { type: "key", value: "5" },
-    { type: "key", value: "0" },
-    { type: "key", value: "ห" },
-    { type: "key", value: "อ" },
-    { type: "key", value: "ฮ" },
-    { type: "confirm", label: "confirm" }
-  ]
-];
+const STORAGE_KEYS = {
+  searchedPlate: "searchedPlate",
+  plateDetailData: "plateDetailData",
+} as const;
 
+// ------------------------------- Function Helpers -------------------------------
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-async function fetchPlateWithProgress(
-  url: string,
-  onProgress: (value: number) => void
-): Promise<FetchPlateWithProgressResult> {
-  onProgress(0);
-
-  const res = await fetch(url, {
-    method: "GET",
-    cache: "no-store",
-  });
-
-  if (!res.body) {
-    const result = (await res.json().catch(() => null)) as PlateSearchResponse | null;
-    onProgress(100);
-
-    return {
-      status: res.status,
-      result,
-    };
-  }
-
-  const total = Number(res.headers.get("content-length") ?? 0);
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-
-  let received = 0;
-  let text = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-
-    if (done) break;
-    if (!value) continue;
-
-    received += value.byteLength;
-    text += decoder.decode(value, { stream: true });
-
-    if (total > 0) {
-      const percent = Math.round((received / total) * 100);
-      onProgress(Math.min(percent, 100));
-    }
-  }
-
-  text += decoder.decode();
-
-  let result: PlateSearchResponse | null = null;
-
-  try {
-    result = text ? (JSON.parse(text) as PlateSearchResponse) : null;
-  } catch {
-    result = null;
-  }
-
-  onProgress(100);
-
-  return {
-    status: res.status,
-    result,
-  };
-}
-
+// ------------------------------- Component -------------------------------
 function SearchPage() {
   const router = useRouter();
   const t = useTranslations("Search");
@@ -155,51 +35,61 @@ function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
-  const [allowBrowserInput, setAllowBrowserInput] = useState(false);
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
+  // ------------------------------- State Helpers -------------------------------
+  const clearError = () => {
+    setError("");
+  };
 
-    const updateInputMode = (event?: MediaQueryListEvent) => {
-      setAllowBrowserInput(event ? event.matches : mediaQuery.matches);
-    };
+  const resetSearchState = () => {
+    clearError();
+    setShowNotFoundPopup(false);
+    setProgress(0);
+  };
 
-    updateInputMode();
+  const completeLoading = async () => {
+    setProgress(100);
+    await wait(PRELOAD_DELAY_MS);
+  };
 
-    mediaQuery.addEventListener("change", updateInputMode);
-
-    return () => {
-      mediaQuery.removeEventListener("change", updateInputMode);
-    };
-  }, []);
-
-  const handleKeyClick = (key: string) => {
+  const updatePlate = (value: string | ((prev: string) => string)) => {
     if (loading) return;
-    setPlate((prev) => `${prev}${key}`);
-    setError("");
+
+    setPlate((prev) =>
+      typeof value === "function" ? value(prev) : value
+    );
+
+    clearError();
   };
 
-  const handleDelete = () => {
-    if (loading) return;
-    setPlate((prev) => prev.slice(0, -1));
-    setError("");
+  const saveSearchResult = (plateNumber: string, data: unknown) => {
+    sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNumber);
+    sessionStorage.setItem(STORAGE_KEYS.plateDetailData, JSON.stringify(data));
   };
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (loading || !allowBrowserInput) return;
-    setPlate(event.target.value);
-    setError("");
+  // ------------------------------- Input Handlers -------------------------------
+  const handleMobileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    updatePlate(event.target.value);
   };
 
-  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!allowBrowserInput) return;
-
+  const handleMobileInputKeyDown = (
+    event: ReactKeyboardEvent<HTMLInputElement>
+  ) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      handleConfirm();
+      void handleConfirm();
     }
   };
 
+  const handleKeyClick = (key: string) => {
+    updatePlate((prev) => `${prev}${key}`);
+  };
+
+  const handleDelete = () => {
+    updatePlate((prev) => prev.slice(0, -1));
+  };
+
+  // ------------------------------- Search Handler -------------------------------
   const handleConfirm = async () => {
     const trimmedPlate = plate.trim();
 
@@ -209,52 +99,47 @@ function SearchPage() {
     }
 
     setLoading(true);
-    setProgress(0);
-    setError("");
-    setShowNotFoundPopup(false);
+    resetSearchState();
 
     try {
       const { status, result } = await fetchPlateWithProgress(
-        `/api/mockdata?plate=${encodeURIComponent(trimmedPlate)}`,
+        `${SEARCH_API_PATH}?plate=${encodeURIComponent(trimmedPlate)}`,
         setProgress
       );
 
       if (!result) {
         setError(t("errorInvalidData"));
-        setProgress(100);
-        await wait(120);
+        await completeLoading();
         return;
       }
 
       if (status === 404) {
-        setProgress(100);
-        await wait(120);
+        await completeLoading();
         setShowNotFoundPopup(true);
         return;
       }
 
       if (!result.ok) {
         setError(result.message || t("errorSearchFailed"));
-        setProgress(100);
-        await wait(120);
+        await completeLoading();
         return;
       }
 
-      sessionStorage.setItem("searchedPlate", trimmedPlate);
-      sessionStorage.setItem("plateDetailData", JSON.stringify(result.data));
+      saveSearchResult(trimmedPlate, result.data);
 
-      setProgress(100);
-      await wait(120);
-
+      await completeLoading();
       router.push(`/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`);
-    } catch (err: unknown) {
-      console.error("unexpected search error:", err);
+    } catch (error) {
+      console.error("Unexpected search error:", error);
       setError(t("errorUnexpected"));
     } finally {
       setLoading(false);
     }
   };
 
+  const confirmText = loading ? t("loadingButton") : t("confirm");
+
+  // ----------------------------------- UI -----------------------------------
   return (
     <>
       <section className="search-page">
@@ -271,12 +156,14 @@ function SearchPage() {
           <div className="search-page__hint">
             <div className="plate-card">
               <span className="plate-card__label">{t("plateLabel")}</span>
+
+              {/* Input Mobile */}
               <input
                 type="text"
-                className={`plate-card__input ${plate ? "is-filled" : ""} ${!allowBrowserInput ? "is-readonly" : ""}`}
+                className={`plate-card__input plate-card__input--mobile ${plate ? "is-filled" : ""}`}
                 value={plate}
-                onChange={handleInputChange}
-                onKeyDown={handleInputKeyDown}
+                onChange={handleMobileInputChange}
+                onKeyDown={handleMobileInputKeyDown}
                 placeholder={t("platePlaceholder")}
                 aria-label={t("plateLabel")}
                 autoComplete="off"
@@ -285,63 +172,33 @@ function SearchPage() {
                 spellCheck={false}
                 inputMode="text"
                 enterKeyHint="search"
-                readOnly={!allowBrowserInput}
                 disabled={loading}
               />
+
+              {/* Input Desktop */}
+              <input
+                type="text"
+                className={`plate-card__input plate-card__input--desktop ${plate ? "is-filled" : ""} is-readonly`}
+                value={plate}
+                placeholder={t("platePlaceholder")}
+                aria-label={t("plateLabel")}
+                readOnly
+              />
             </div>
+
             <p>{t("subtitle")}</p>
 
             {error ? <p className="search-page__error">{error}</p> : null}
           </div>
 
-          <div className="plate-keyboard-container">
-            <div className="plate-keyboard">
-              {keyboardRows.map((row, rowIndex) =>
-                row.map((item, itemIndex) => {
-                  if (item.type === "key") {
-                    return (
-                      <button
-                        key={`${rowIndex}-${itemIndex}-${item.value}`}
-                        type="button"
-                        className="plate-keyboard__key"
-                        onClick={() => handleKeyClick(item.value)}
-                        disabled={loading}
-                      >
-                        {item.value}
-                      </button>
-                    );
-                  }
-
-                  if (item.type === "delete") {
-                    return (
-                      <button
-                        key={`${rowIndex}-${itemIndex}-delete`}
-                        type="button"
-                        className="plate-keyboard__action plate-keyboard__action--delete"
-                        onClick={handleDelete}
-                        aria-label="delete"
-                        disabled={loading}
-                      >
-                        <FiDelete />
-                      </button>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={`${rowIndex}-${itemIndex}-confirm`}
-                      type="button"
-                      className="plate-keyboard__action plate-keyboard__action--confirm"
-                      onClick={handleConfirm}
-                      disabled={loading}
-                    >
-                      {loading ? t("loadingButton") : t("confirm")}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
+          <PlateKeyboard
+            rows={plateKeyboardRows}
+            loading={loading}
+            confirmText={confirmText}
+            onKeyClick={handleKeyClick}
+            onDelete={handleDelete}
+            onConfirm={handleConfirm}
+          />
         </div>
       </section>
 

@@ -1,21 +1,7 @@
-export type KeyboardKeyItem = {
-  type: "key";
-  value: string;
-};
-
-export type KeyboardDeleteItem = {
-  type: "delete";
-};
-
-export type KeyboardConfirmItem = {
-  type: "confirm";
-  label: string;
-};
-
 export type KeyboardItem =
-  | KeyboardKeyItem
-  | KeyboardDeleteItem
-  | KeyboardConfirmItem;
+  | { type: "key"; value: string }
+  | { type: "delete" }
+  | { type: "confirm" };
 
 export type PlateDetail = {
   plate: string;

@@ -1,13 +1,19 @@
 "use client";
 
-import { FiPhoneCall } from "react-icons/fi";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// Components
 import BackBtn from "@/src/app/components/BackBtn";
+// CSS
 import "@/src/app/css/Help.css";
+// Icons
+import { FiPhoneCall } from "react-icons/fi";
 
+// ------------------------------- Function -------------------------------
 function Help() {
   const t = useTranslations("Help");
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <section className="help-page">
       <div className="help-page__back">

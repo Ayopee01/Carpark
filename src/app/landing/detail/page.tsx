@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FiPhoneCall } from "react-icons/fi";
-import { FaCheck } from "react-icons/fa";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// Components
 import BackBtn from "@/src/app/components/BackBtn";
 import PaymentPopup from "@/src/app/components/PaymentPopup";
+// CSS
 import "@/src/app/css/Detail.css";
+// Icons
+import { FiPhoneCall } from "react-icons/fi";
+import { FaCheck } from "react-icons/fa";
 
+// ------------------------------- Types -------------------------------
 type DetailData = {
     plate: string;
     province: string;
@@ -20,6 +25,7 @@ type DetailData = {
     paymentMethod: string;
 };
 
+// ------------------------------- Function -------------------------------
 function DetailPage() {
     const searchParams = useSearchParams();
     const plate = searchParams.get("plate") ?? "";
@@ -32,6 +38,7 @@ function DetailPage() {
     const [fetchError, setFetchError] = useState("");
     const [resolvedPlate, setResolvedPlate] = useState("");
 
+    // ------------------------------- API Call -------------------------------
     useEffect(() => {
         if (!plate) return;
 
@@ -86,6 +93,7 @@ function DetailPage() {
 
     const plateValue = currentData?.plate || plate || "-";
 
+    // ----------------------------------- UI -----------------------------------
     return (
         <>
             <section className="detail-page">

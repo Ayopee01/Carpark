@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { CiCircleQuestion } from "react-icons/ci";
 import Link from "next/link";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// Components
 import LangButton from "./LangButton";
+// CSS
 import "../css/SideMenu.css";
+// Icons
+import { CiCircleQuestion } from "react-icons/ci";
 
+// ------------------------------- Function -------------------------------
 function SideMenu({ open, onClose }) {
     const t = useTranslations("SideMenu");
 
+    // ------------------------------- useEffect -------------------------------
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === "Escape") onClose();
@@ -31,6 +37,7 @@ function SideMenu({ open, onClose }) {
         };
     }, [open]);
 
+    // ----------------------------------- UI -----------------------------------
     return (
         <>
             <div

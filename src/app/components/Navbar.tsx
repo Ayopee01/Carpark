@@ -1,18 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { HiMenuAlt2, HiMenu } from "react-icons/hi";
-import { CiCircleQuestion } from "react-icons/ci";
-import { useTranslations } from "next-intl";
-import "../css/Navbar.css";
 import Link from "next/link";
+// Import Libraries
+import { useTranslations } from "next-intl";
+// Components
 import SideMenu from "./SideMenu";
 import LangButton from "./LangButton";
+// CSS
+import "../css/Navbar.css";
+// Icons
+import { HiMenuAlt2, HiMenu } from "react-icons/hi";
+import { CiCircleQuestion } from "react-icons/ci";
 
+// ------------------------------- Function -------------------------------
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const t = useTranslations("Navbar");
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <>
       <nav className="navbar">

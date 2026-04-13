@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { FiChevronDown } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+// Import Libraries
 import { useLocale, useTranslations } from "next-intl";
+// CSS
 import "@/src/app/css/LangButton.css";
+// Icons
+import { FiChevronDown } from "react-icons/fi";
 
+// ------------------------------- Function -------------------------------
 function LangButton({ variant = "side" }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -15,6 +19,7 @@ function LangButton({ variant = "side" }) {
   const locale = useLocale();
   const t = useTranslations("SideMenu");
 
+  // ------------------------------- useEffect -------------------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!wrapRef.current?.contains(event.target)) {
@@ -57,6 +62,7 @@ function LangButton({ variant = "side" }) {
       ? "langDropdown langDropdown--nav"
       : "langDropdown langDropdown--side";
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <div className={wrapClassName} ref={wrapRef}>
       <button

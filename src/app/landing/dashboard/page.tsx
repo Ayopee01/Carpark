@@ -1,14 +1,19 @@
 "use client";
 
+import Link from "next/link";
+// Import Libraries
+import { useTranslations } from "next-intl";
+// CSS
+import "@/src/app/css/Dashboard.css";
+// Icons
 import { TbScan } from "react-icons/tb";
 import { MdOutlineImageSearch } from "react-icons/md";
-import { useTranslations } from "next-intl";
-import "@/src/app/css/Dashboard.css";
-import Link from "next/link";
 
+// ------------------------------- Function -------------------------------
 function Dashboard() {
   const t = useTranslations("Dashboard");
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <section className="dashboard">
       <div className="container-dashboard">

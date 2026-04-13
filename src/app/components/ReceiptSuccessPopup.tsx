@@ -1,15 +1,20 @@
 "use client";
 
-import { FiCheck, FiPrinter } from "react-icons/fi";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// CSS
 import "@/src/app/css/ReceiptSuccessPopup.css";
+// Icons
+import { FiCheck, FiPrinter } from "react-icons/fi";
 
+// ------------------------------- Types -------------------------------
 type ReceiptSuccessPopupProps = {
   open: boolean;
   onClose: () => void;
   onPrint?: () => void;
 };
 
+// ------------------------------- Function -------------------------------
 function ReceiptSuccessPopup({
   open,
   onClose,
@@ -20,6 +25,7 @@ function ReceiptSuccessPopup({
 
   if (!open) return null;
 
+  // ----------------------------------- UI -----------------------------------
   return (
     <div className="receipt-popup-overlay">
       <div

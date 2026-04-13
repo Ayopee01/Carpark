@@ -1,15 +1,20 @@
 "use client";
 
-import { FiRefreshCw, FiHeadphones } from "react-icons/fi";
+// Import Libraries
 import { useTranslations } from "next-intl";
+// CSS
 import "@/src/app/css/PlateNotFoundPopup.css";
+// Icons
+import { FiRefreshCw, FiHeadphones } from "react-icons/fi";
 
+// ------------------------------- Types -------------------------------
 type PlateNotFoundPopupProps = {
     open: boolean;
     onClose: () => void;
     onRetry: () => void;
 };
 
+// ------------------------------- Function -------------------------------
 function PlateNotFoundPopup({
     open,
     onClose,
@@ -19,6 +24,7 @@ function PlateNotFoundPopup({
 
     if (!open) return null;
 
+    // ----------------------------------- UI -----------------------------------
     return (
         <div className="plate-popup-overlay" onClick={onClose}>
             <div

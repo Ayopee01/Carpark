@@ -163,6 +163,9 @@
     cursor: not-allowed;
 }
 
+/* ==========================================================================
+   Input Base
+   ========================================================================== */
 .plate-card__input {
     width: 100%;
     min-height: 90px;
@@ -195,6 +198,19 @@
 .plate-card__input.is-readonly {
     cursor: default;
     caret-color: transparent;
+}
+
+/* ==========================================================================
+   Responsive Input Mode
+   - Desktop: show readonly input + keyboard UI
+   - Mobile: show editable input + hide keyboard UI
+   ========================================================================== */
+.plate-card__input--mobile {
+    display: none;
+}
+
+.plate-card__input--desktop {
+    display: block;
 }
 
 @media (max-width: 1024px) {
@@ -248,33 +264,12 @@
         gap: 40px;
     }
 
-    .plate-card__input {
-        width: 100%;
-        min-height: 90px;
-        border: none;
-        outline: none;
-        border-radius: 16px;
-        background: #f6f6f6;
+    .plate-card__input--mobile {
         display: block;
-        padding: 0 18px;
-        box-sizing: border-box;
-        text-align: center;
-        font-size: 18px;
-        font-family: inherit;
-        line-height: 90px;
-        color: #9aa1aa;
-        appearance: none;
-        -webkit-appearance: none;
     }
 
-    .plate-card__input::placeholder {
-        color: #9aa1aa;
-        opacity: 1;
-    }
-
-    .plate-card__input.is-filled {
-        color: #2d3138;
-        font-weight: 600;
+    .plate-card__input--desktop {
+        display: none;
     }
 
     .plate-keyboard-container {
