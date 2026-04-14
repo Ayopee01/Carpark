@@ -3,6 +3,7 @@
 // Components
 import Dashboard from "./landing/dashboard/page";
 
+// ----------------------------------- UI -----------------------------------
 function Page() {
   return (
     <>

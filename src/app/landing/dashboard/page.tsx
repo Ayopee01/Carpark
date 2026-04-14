@@ -25,15 +25,23 @@ function Dashboard() {
 
         <div className="card-dashboard">
           <Link className="scan-btn" href="/landing/scan">
-            <TbScan />
-            <h2>{t("scanTitle")}</h2>
-            <p>{t("scanSubtitle")}</p>
+            <div className="icon-scan-btn">
+              <TbScan />
+            </div>
+            <div className="text-scan-btn">
+              <h2>{t("scanTitle")}</h2>
+              <p>{t("scanSubtitle")}</p>
+            </div>
           </Link>
 
-          <Link className="img-btn" href="/landing/search">
-            <MdOutlineImageSearch />
-            <h2>{t("searchTitle")}</h2>
-            <p>{t("searchSubtitle")}</p>
+          <Link className="search-btn" href="/landing/search">
+            <div className="icon-search-btn">
+              <MdOutlineImageSearch />
+            </div>
+            <div className="text-search-btn">
+              <h2>{t("searchTitle")}</h2>
+              <p>{t("searchSubtitle")}</p>
+            </div>
           </Link>
         </div>
       </div>

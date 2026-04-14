@@ -27,7 +27,7 @@
 
 /* icon */
 .back-btn svg {
-  width: var(--w-dropdown);
-  height: var(--h-dropdown);
+  width: var(--w-icon-dropdown);
+  height: var(--h-icon-dropdown);
   flex-shrink: 0;
 }

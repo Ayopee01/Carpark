@@ -23,6 +23,7 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
+  height: 48px;
 }
 
 .logoBox {
@@ -40,7 +41,7 @@
 }
 
 .brandText {
-  min-width: 0;
+  min-height: 0;
 }
 
 .title {
@@ -93,8 +94,8 @@
 }
 
 .langButton svg {
-  width: var(--w-dropdown);
-  height: var(--h-dropdown);
+  width: var(--w-icon-dropdown);
+  height: var(--h-icon-dropdown);
   color: var(--text-menu-nav);
 }
 
@@ -147,12 +148,12 @@
     padding-bottom: 0;
   }
 
-  /* ซ่อน menu */
+  /* hide menu */
   .content-right {
     display: none;
   }
 
-  /* แสดง hamburger */
+  /* show hamburger */
   .hamburger {
     display: flex;
   }
