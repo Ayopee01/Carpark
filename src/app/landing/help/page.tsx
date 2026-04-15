@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 // Import Libraries
 import { useTranslations } from "next-intl";
 // Components
@@ -16,33 +17,34 @@ function Help() {
   // ----------------------------------- UI -----------------------------------
   return (
     <section className="help-page">
-      <div className="help-page__back">
-        <BackBtn />
-      </div>
-
       <div className="help-page__content">
+        <div>
+          <BackBtn />
+        </div>
         <div className="help-page__hero">
           <h1 className="help-page__title">{t("title")}</h1>
           <h3 className="help-page__subtitle">{t("subtitle")}</h3>
           <p className="help-page__desc">
             {t("descLine1")}
-            <br />
             {t("descLine2")}
           </p>
         </div>
 
-        <div className="help-page__contact-title">{t("contactTitle")}</div>
+        <div className="help-page__contact">
+          <div className="help-page__contact-title">
+            {t("contactTitle")}
+          </div>
+          <Link href="tel:+66123123456" className="help-card">
+            <span className="help-card__icon">
+              <FiPhoneCall />
+            </span>
 
-        <a href="tel:+66123123456" className="help-card">
-          <span className="help-card__icon">
-            <FiPhoneCall />
-          </span>
-
-          <span className="help-card__text">
-            <strong>+66-123xxxxxx</strong>
-            <small>{t("contactStaff")}</small>
-          </span>
-        </a>
+            <span className="help-card__text">
+              <strong>+66-123xxxxxx</strong>
+              <small>{t("contactStaff")}</small>
+            </span>
+          </Link>
+        </div>
       </div>
     </section>
   );

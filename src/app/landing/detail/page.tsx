@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 // Import Libraries
 import { useTranslations } from "next-intl";
 // Components
@@ -10,8 +12,8 @@ import PaymentPopup from "@/src/app/components/PaymentPopup";
 // CSS
 import "@/src/app/css/Detail.css";
 // Icons
-import { FiPhoneCall } from "react-icons/fi";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaChevronRight } from "react-icons/fa";
+import { MdSupportAgent } from "react-icons/md";
 
 // ------------------------------- Types -------------------------------
 type DetailData = {
@@ -97,109 +99,120 @@ function DetailPage() {
     return (
         <>
             <section className="detail-page">
-                <div className="detail-page__back">
-                    <BackBtn />
-                </div>
-
                 <div className="detail-page__content">
+                    <div>
+                        <BackBtn />
+                    </div>
                     <header className="detail-page__header">
                         <h1>{t("title")}</h1>
                         <p>{t("subtitle")}</p>
                     </header>
 
-                    <div className="detail-plate-card">
-                        <span className="detail-plate-card__label">{t("plateLabel")}</span>
+                    <div className="detail-plate">
+                        <div className="detail-plate-card">
+                            <span className="detail-plate-card__label">{t("plateLabel")}</span>
 
-                        <div className="detail-plate-card__input">
-                            <span className="detail-plate-card__value">{plateValue}</span>
+                            <div className="detail-plate-card__input">
+                                <span className="detail-plate-card__value">{plateValue}</span>
 
-                            <span
-                                className="detail-plate-card__edit detail-plate-card__edit--done"
-                                aria-hidden="true"
-                            >
-                                <FaCheck />
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="detail-section-title">{t("sectionTitle")}</div>
-
-                    {error ? <div className="detail-error">{error}</div> : null}
-
-                    <div className="detail-info-grid">
-                        <div className="detail-info-card">
-                            <span className="detail-info-card__label">{t("dateLabel")}</span>
-                            <strong>{currentData?.date || "-"}</strong>
-                        </div>
-
-                        <div className="detail-info-card">
-                            <span className="detail-info-card__label">{t("entryTimeLabel")}</span>
-                            <strong>{currentData?.entryTime || "-"}</strong>
-                        </div>
-
-                        <div className="detail-info-card">
-                            <span className="detail-info-card__label">{t("durationLabel")}</span>
-                            <strong>{currentData?.duration || "-"}</strong>
-                        </div>
-
-                        <div className="detail-info-card detail-info-card--fee">
-                            <div className="detail-info-card__fee-left">
-                                <span className="detail-info-card__label">
-                                    {t("paymentStatusLabel")}
+                                <span
+                                    className="detail-plate-card__edit detail-plate-card__edit--done"
+                                    aria-hidden="true"
+                                >
+                                    <FaCheck />
                                 </span>
-                                <strong className="detail-info-card__danger">
-                                    {currentData?.paymentStatus || "-"}
-                                </strong>
+                            </div>
+                        </div>
+
+                        <div className="detail-section-title">{t("sectionTitle")}</div>
+
+                        {error ? <div className="detail-error">{error}</div> : null}
+
+                        <div className="detail-info-grid">
+                            <div className="detail-info-card">
+                                <span className="detail-info-card__label">{t("dateLabel")}</span>
+                                <strong>{currentData?.date || "-"}</strong>
                             </div>
 
-                            <div className="detail-fee-box">
-                                <span>{t("serviceFee")}</span>
-                                <strong>
-                                    {currentData?.amount != null
-                                        ? `${currentData.amount} ${common("baht")}`
-                                        : "-"}
-                                </strong>
+                            <div className="detail-info-card">
+                                <span className="detail-info-card__label">{t("entryTimeLabel")}</span>
+                                <strong>{currentData?.entryTime || "-"}</strong>
+                            </div>
+
+                            <div className="detail-info-card">
+                                <span className="detail-info-card__label">{t("durationLabel")}</span>
+                                <strong>{currentData?.duration || "-"}</strong>
+                            </div>
+
+                            <div className="detail-info-card detail-info-card--fee">
+                                <div className="detail-info-card__fee-left">
+                                    <span className="detail-info-card__label">
+                                        {t("paymentStatusLabel")}
+                                    </span>
+                                    <strong className="detail-info-card__danger">
+                                        {currentData?.paymentStatus || "-"}
+                                    </strong>
+                                </div>
+
+                                <div className="detail-fee-box">
+                                    <span>{t("serviceFee")}</span>
+                                    <strong>
+                                        {currentData?.amount != null
+                                            ? `${currentData.amount} ${common("baht")}`
+                                            : "-"}
+                                    </strong>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="payment-panel">
-                        <h2>{t("paymentChannels")}</h2>
+                        <div className="payment-panel__content">
+                            <h2>{t("paymentChannels")}</h2>
 
-                        <p className="payment-panel__note">{t("paymentNote")}</p>
+                            <p className="payment-panel__note">{t("paymentNote")}</p>
 
-                        <div className="payment-card">
-                            <div className="payment-card__top">
-                                <div className="payment-card__logo">PROMPTPAY</div>
+                            <div className="payment-card">
+                                <div className="payment-card__top">
+                                    <Image
+                                        src="/icon/PromptPay-logo.png"
+                                        alt="PromptPay"
+                                        className="promptpay-logo__img"
+                                        width={64}
+                                        height={64}
+                                        style={{ objectFit: "contain" }}
+                                    />
+                                    <div className="payment-card__tag">
+                                        <span>FAST &amp; SECURE</span>
+                                        <i />
+                                    </div>
+                                </div>
 
-                                <div className="payment-card__tag">
-                                    <span>FAST &amp; SECURE</span>
-                                    <i />
+                                <div className="payment-card__body">
+                                    <h3>{currentData?.paymentMethod || "-"}</h3>
+                                    <p>{t("searchLicensePlate")}</p>
+                                </div>
+
+                                <div className="payment-card__button">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPopupOpen(true)}
+                                        disabled={!currentData}
+                                    >
+                                        {common("continue")}
+                                    </button>
+                                    <FaChevronRight />
                                 </div>
                             </div>
 
-                            <div className="payment-card__body">
-                                <h3>{currentData?.paymentMethod || "-"}</h3>
-                                <p>{t("searchLicensePlate")}</p>
+                            <div className="payment-panel__help">
+                                <span>{t("paymentProblem")}</span>
+
+                                <Link className="contact_staff" href="tel:+66123123456">
+                                    <MdSupportAgent />
+                                    <span >{common("contactStaff")}</span>
+                                </Link>
                             </div>
-
-                            <button
-                                type="button"
-                                className="payment-card__button"
-                                onClick={() => setIsPopupOpen(true)}
-                                disabled={!currentData}
-                            >
-                                {common("continue")}
-                            </button>
-                        </div>
-
-                        <div className="payment-panel__help">
-                            <span>{t("paymentProblem")}</span>
-
-                            <a href="tel:+66123123456">
-                                <FiPhoneCall />
-                                <span>{common("contactStaff")}</span>
-                            </a>
                         </div>
                     </div>
                 </div>

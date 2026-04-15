@@ -65,7 +65,7 @@
     min-height: 288px;
     padding: 28px 24px 24px;
     gap: 24px;
-    border: 1.5px solid var(--theme-yellow);
+    border: 1.5px solid var(--theme);
     border-radius: var(--radius-full);
     background: var(--background);
     box-shadow: var(--shadow-soft);
@@ -87,7 +87,7 @@
     justify-content: center;
     width: 96px;
     height: 96px;
-    background: var(--theme-yellow);
+    background: var(--theme);
     border-radius: 12px;
 }
 

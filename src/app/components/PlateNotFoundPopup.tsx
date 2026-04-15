@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 // CSS
 import "@/src/app/css/PlateNotFoundPopup.css";
 // Icons
-import { FiRefreshCw, FiHeadphones } from "react-icons/fi";
+import { MdRefresh, MdSupportAgent } from "react-icons/md";
 
 // ------------------------------- Types -------------------------------
 type PlateNotFoundPopupProps = {
@@ -45,14 +45,9 @@ function PlateNotFoundPopup({
                     </h2>
 
                     <div className="plate-popup__icon-wrap">
-                        <button
-                            type="button"
-                            className="plate-popup__icon-btn"
-                            onClick={onRetry}
-                            aria-label={t("retryAria")}
-                        >
-                            <FiRefreshCw />
-                        </button>
+                        <div className="plate-popup__icon-btn">
+                            <MdRefresh />
+                        </div>
                     </div>
 
                     <button
@@ -70,7 +65,7 @@ function PlateNotFoundPopup({
                         className="plate-popup__contact-btn"
                         onClick={onClose}
                     >
-                        <FiHeadphones />
+                        <MdSupportAgent />
                         <span>{t("contactStaff")}</span>
                     </button>
                 </div>

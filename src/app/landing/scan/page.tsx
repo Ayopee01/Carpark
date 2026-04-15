@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 // Import Libraries
 import { useTranslations } from "next-intl";
 // Components
@@ -16,36 +17,36 @@ function ScanPage() {
     // ----------------------------------- UI -----------------------------------
     return (
         <section className="scan-page">
-            <div className="scan-page__back">
-                <BackBtn />
-            </div>
-
             <div className="scan-page__content">
+                <div>
+                    <BackBtn />
+                </div>
                 <div className="scan-page__header">
                     <h1>Smart Carpark</h1>
                     <p>{t("subtitle")}</p>
                 </div>
 
-                <div className="scan-page__divider" />
-
-                <div className="scan-box">
-                    <span className="scan-box__corner scan-box__corner--tl" />
-                    <span className="scan-box__corner scan-box__corner--tr" />
-                    <span className="scan-box__corner scan-box__corner--bl" />
-                    <span className="scan-box__corner scan-box__corner--br" />
-
-                    <div className="scan-box__line" />
-
-                    <div className="scan-box__icon">
-                        <MdOutlineQrCodeScanner />
+                <div className="scan-page__icon">
+                    <div
+                        className="scan-page__divider">
                     </div>
+                    <Image
+                        src="/icon/Scanner_Viewfinder.png"
+                        alt="scanner viewfinder"
+                        className="scan-page__viewfinder"
+                        width={384}
+                        height={338}
+                    />
                 </div>
 
-                <p className="scan-page__hint">
-                    {t("hintLine1")}
-                    <br />
-                    {t("hintLine2")}
-                </p>
+                <div className="scan-page__hint">
+                    <p>
+                        {t("hintLine1")}
+                    </p>
+                    <p>
+                        {t("hintLine2")}
+                    </p>
+                </div>
             </div>
         </section>
     );

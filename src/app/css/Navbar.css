@@ -1,8 +1,7 @@
-/* container */
 .navbar {
   width: 100%;
   height: 113px;
-  background: var(--theme-yellow);
+  background: var(--theme);
   /* position: sticky;
   top: 0;
   z-index: 1000; */
@@ -109,6 +108,7 @@
   font-weight: 700;
   line-height: 24px;
   color: var(--text-menu-nav);
+  text-decoration: none;
 }
 
 .helpButton svg {

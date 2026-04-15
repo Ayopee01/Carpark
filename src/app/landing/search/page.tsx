@@ -13,8 +13,8 @@ import PreloadPopup from "@/src/app/components/PreloadPopup";
 import "@/src/app/css/Search.css";
 
 // ------------------------------- Config -------------------------------
-const SEARCH_API_PATH = "/api/mockdata";
-const PRELOAD_DELAY_MS = 1200;
+const SEARCH_API_PATH = "/api/mockdata"; // Test API Mock
+const PRELOAD_DELAY_MS = 1200; // Test Preload
 
 const STORAGE_KEYS = {
   searchedPlate: "searchedPlate",
@@ -144,7 +144,7 @@ function SearchPage() {
     <>
       <section className="search-page">
         <div className="search-page__content">
-          <div className="search-page__back">
+          <div>
             <BackBtn />
           </div>
 
@@ -186,9 +186,9 @@ function SearchPage() {
               />
             </div>
 
-            <p>{t("subtitle")}</p>
-
-            {error ? <p className="search-page__error">{error}</p> : null}
+            <p className={error ? "search-page__error" : "search-page__subtitle"}>
+              {error || t("subtitle")}
+            </p>
           </div>
 
           <PlateKeyboard

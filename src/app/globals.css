@@ -4,7 +4,7 @@
   --foreground: #171717;
 
   /* theme-colors */
-  --theme-yellow: #FFD54F;
+  --theme: #FFD54F;
 
   /* logo-colors */
   --logo: #96CCFF;
@@ -13,16 +13,32 @@
   --text-menu-nav: #4A90E2;
   --bg-menu-nav: #F3F3F3;
 
+  /* back-button-colors */
+  --bg-hover-back-btn: #F2C74414;
+  --bg-active-back-btn: #F2C74429;
+
+  /* lang-button-colors */
+  --bg-hover-lang-btn: #f8fafc;
+  --bg-active-lang-btn: #e8f1ff;
+
   /* icon-colors */
   --icon-check: #64D300;
-  --green: #27C840;
+  --icon-pen: #808080;
+  --keyboard: #ECF1F6;
+  --keyboard-delete: #D7DEE3;
+  --keyboard-confirm: #FDD34D;
+  --keyboard-text-confirm: #5C4900;
 
   /* base-text-colors */
   --text-primary: #0D1B2A;
   --text-secondary: #2A2F32;
   --text-tertiary: #999999;
+  --text-muted: #575C60;
+  --text-disabled: #705900;
+  --text-inverse: #73777B;
+  --text-warning-error: #FF0000;
   --border-soft: #EAE9EC;
-  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0px 1px 2px 0px #0000000D;
 
   /* base-dimensions */
   --radius-full: 25px;
