@@ -91,13 +91,14 @@ function PaymentPopupContent({ onClose, amount }: PaymentPopupContentProps) {
           <div className="payment-popup__qr-frame">
             <div className="payment-popup__qr-icon">
               <BsQrCodeScan />
-            </div>
 
-            <div className="payment-popup__amount">
-              {amount.toLocaleString(numberLocale)}
+
+              <div className="payment-popup__amount">
+                {amount.toLocaleString(numberLocale)}
+              </div>
+              <div className="payment-popup__currency">{common("baht")}</div>
+              <p className="payment-popup__caption">{t("caption")}</p>
             </div>
-            <div className="payment-popup__currency">{common("baht")}</div>
-            <p className="payment-popup__caption">{t("caption")}</p>
           </div>
         </div>
 
