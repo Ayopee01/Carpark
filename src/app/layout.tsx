@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 // Import Libraries
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+// Providers
+import { KioskThemeRealtimeProvider } from "@/src/app/providers/KioskThemeRealtimeProvider";
 // Components
 import Navbar from "./components/Navbar";
 // Fonts
@@ -42,8 +44,10 @@ export default async function RootLayout({
     <html lang={locale} className={`${inter.variable} ${notoThai.variable}`}>
       <body>
         <NextIntlClientProvider>
-          <Navbar />
-          {children}
+          <KioskThemeRealtimeProvider>
+            <Navbar />
+            {children}
+          </KioskThemeRealtimeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -44,7 +44,7 @@
   width: 212.39px;
   height: 4px;
   border-radius: 9999px;
-  background: var(--keyboard-confirm);
+  background: var(--theme);
 }
 
 .scan-page__viewfinder {
@@ -62,6 +62,13 @@
   vertical-align: middle;
   color: color-mix(in srgb, var(--text-primary) 50%, transparent);
 }
+
+/* .scan-page__result{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+} */
 
 /* responsive */
 @media (max-width: 1024px) {

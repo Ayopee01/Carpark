@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 // Import Libraries
 import { useTranslations } from "next-intl";
+// Providers
+import { useKioskTheme } from "@/src/app/providers/KioskThemeRealtimeProvider";
 // Components
 import SideMenu from "./SideMenu";
 import LangButton from "./LangButton";
@@ -17,6 +19,7 @@ import { CiCircleQuestion } from "react-icons/ci";
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const t = useTranslations("Navbar");
+  const { theme, systemName } = useKioskTheme();
 
   // ----------------------------------- UI -----------------------------------
   return (
@@ -24,12 +27,17 @@ function Navbar() {
       <nav className="navbar">
         <div className="inner">
           <div className="content-left">
-            <div className="logoBox">P</div>
+            {theme?.logoUrl ? (
+              <img
+                src={theme.logoUrl}
+                alt={systemName ?? "Logo"}
+                className="navbarLogo"
+              />
+            ) : null}
 
-            <div className="brandText">
-              <h1 className="title">Smart Carpark</h1>
-              <p className="subtitle">{t("customerSubtitle")}</p>
-            </div>
+            {/* <div className="brandText">
+              <h1 className="title">{systemName ?? "Smart Carpark Kiosk"}</h1>
+            </div> */}
           </div>
 
           <div className="content-right">

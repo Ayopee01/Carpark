@@ -1,13 +1,13 @@
 "use client"
 
 // Components
-import Dashboard from "./landing/dashboard/page";
+import Activate from "./landing/activate/page";
 
 // ----------------------------------- UI -----------------------------------
 function Page() {
   return (
     <>
-      <Dashboard />
+      <Activate />
     </>
   )
 }

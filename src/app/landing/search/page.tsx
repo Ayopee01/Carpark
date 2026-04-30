@@ -1,31 +1,114 @@
 "use client";
 
-import { useState, type ChangeEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { useRouter } from "next/navigation";
-// Import Libraries
 import { useTranslations } from "next-intl";
-// Components
+
 import BackBtn from "@/src/app/components/BackBtn";
-import PlateKeyboard, { fetchPlateWithProgress, plateKeyboardRows } from "@/src/app/components/PlateKeyboard";
+import PlateKeyboard, {
+  plateKeyboardRows,
+} from "@/src/app/components/PlateKeyboard";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
-// CSS
+
 import "@/src/app/css/Search.css";
 
-// ------------------------------- Config -------------------------------
-const SEARCH_API_PATH = "/api/mockdata"; // Test API Mock
-const PRELOAD_DELAY_MS = 1200; // Test Preload
+const SEARCH_API_PATH = "/api/kiosk/search";
+const PRELOAD_DELAY_MS = 0;
 
 const STORAGE_KEYS = {
   searchedPlate: "searchedPlate",
   plateDetailData: "plateDetailData",
+  plateSearchResponse: "plateSearchResponse",
 } as const;
 
-// ------------------------------- Function Helpers -------------------------------
+type KioskSearchItem = {
+  id: string;
+  billNo: string;
+  plateNo: string;
+  vehicleType: string;
+  serviceType: string;
+  entryAt: string;
+  exitAt: string | null;
+  calculatedAt: string;
+  exitTimeLimit: string | null;
+  isOverstay: boolean;
+  status: string;
+  baseAmount: number;
+  netAmount: number;
+  totalPaid: number;
+  remainingAmount: number;
+  serviceDisplay: string;
+  durationHour: number;
+  totalMinutes: number;
+  payments: unknown[];
+  qrData: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type KioskSearchResponse = {
+  success?: boolean;
+  message?: string;
+  items?: KioskSearchItem[];
+};
+
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-// ------------------------------- Component -------------------------------
+function getErrorMessage(value: unknown, fallback: string) {
+  if (
+    value &&
+    typeof value === "object" &&
+    "message" in value &&
+    typeof value.message === "string"
+  ) {
+    return value.message;
+  }
+
+  return fallback;
+}
+
+async function fetchKioskSearchWithProgress(
+  plateNo: string,
+  onProgress: (value: number) => void
+) {
+  onProgress(15);
+
+  try {
+    onProgress(35);
+
+    const searchParams = new URLSearchParams({
+      plateNo,
+    });
+
+    const response = await fetch(`${SEARCH_API_PATH}?${searchParams.toString()}`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    onProgress(92);
+
+    const result = (await response.json().catch(() => null)) as
+      | KioskSearchResponse
+      | null;
+
+    onProgress(100);
+
+    return {
+      status: response.status,
+      result,
+    };
+  } catch (error) {
+    onProgress(100);
+    throw error;
+  }
+}
+
 function SearchPage() {
   const router = useRouter();
   const t = useTranslations("Search");
@@ -36,7 +119,6 @@ function SearchPage() {
   const [error, setError] = useState("");
   const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
 
-  // ------------------------------- State Helpers -------------------------------
   const clearError = () => {
     setError("");
   };
@@ -62,12 +144,23 @@ function SearchPage() {
     clearError();
   };
 
-  const saveSearchResult = (plateNumber: string, data: unknown) => {
+  const saveSearchResult = (
+    plateNumber: string,
+    response: KioskSearchResponse
+  ) => {
+    const firstItem = response.items?.[0] ?? null;
+
     sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNumber);
-    sessionStorage.setItem(STORAGE_KEYS.plateDetailData, JSON.stringify(data));
+    sessionStorage.setItem(
+      STORAGE_KEYS.plateDetailData,
+      JSON.stringify(firstItem)
+    );
+    sessionStorage.setItem(
+      STORAGE_KEYS.plateSearchResponse,
+      JSON.stringify(response)
+    );
   };
 
-  // ------------------------------- Input Handlers -------------------------------
   const handleMobileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     updatePlate(event.target.value);
   };
@@ -89,7 +182,6 @@ function SearchPage() {
     updatePlate((prev) => prev.slice(0, -1));
   };
 
-  // ------------------------------- Search Handler -------------------------------
   const handleConfirm = async () => {
     const trimmedPlate = plate.trim();
 
@@ -102,8 +194,8 @@ function SearchPage() {
     resetSearchState();
 
     try {
-      const { status, result } = await fetchPlateWithProgress(
-        `${SEARCH_API_PATH}?plate=${encodeURIComponent(trimmedPlate)}`,
+      const { status, result } = await fetchKioskSearchWithProgress(
+        trimmedPlate,
         setProgress
       );
 
@@ -119,15 +211,22 @@ function SearchPage() {
         return;
       }
 
-      if (!result.ok) {
-        setError(result.message || t("errorSearchFailed"));
+      if (status >= 400) {
+        setError(getErrorMessage(result, t("errorSearchFailed")));
         await completeLoading();
         return;
       }
 
-      saveSearchResult(trimmedPlate, result.data);
+      if (!Array.isArray(result.items) || result.items.length === 0) {
+        await completeLoading();
+        setShowNotFoundPopup(true);
+        return;
+      }
+
+      saveSearchResult(trimmedPlate, result);
 
       await completeLoading();
+
       router.push(`/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`);
     } catch (error) {
       console.error("Unexpected search error:", error);
@@ -139,7 +238,6 @@ function SearchPage() {
 
   const confirmText = loading ? t("loadingButton") : t("confirm");
 
-  // ----------------------------------- UI -----------------------------------
   return (
     <>
       <section className="search-page">
@@ -155,12 +253,14 @@ function SearchPage() {
 
           <div className="search-page__hint">
             <div className="plate-card">
-              <span className="plate-card__label">{t("plateLabel")}</span>
+              <span className="plate-card__label">
+                {t("plateLabel")}
+              </span>
 
-              {/* Input Mobile */}
               <input
                 type="text"
-                className={`plate-card__input plate-card__input--mobile ${plate ? "is-filled" : ""}`}
+                className={`plate-card__input plate-card__input--mobile ${plate ? "is-filled" : ""
+                  }`}
                 value={plate}
                 onChange={handleMobileInputChange}
                 onKeyDown={handleMobileInputKeyDown}
@@ -175,10 +275,10 @@ function SearchPage() {
                 disabled={loading}
               />
 
-              {/* Input Desktop */}
               <input
                 type="text"
-                className={`plate-card__input plate-card__input--desktop ${plate ? "is-filled" : ""} is-readonly`}
+                className={`plate-card__input plate-card__input--desktop ${plate ? "is-filled" : ""
+                  } is-readonly`}
                 value={plate}
                 placeholder={t("platePlaceholder")}
                 aria-label={t("plateLabel")}

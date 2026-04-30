@@ -26,7 +26,7 @@
   --icon-pen: #808080;
   --keyboard: #ECF1F6;
   --keyboard-delete: #D7DEE3;
-  --keyboard-confirm: #FDD34D;
+  --keyboard-confirm: var(--theme);
   --keyboard-text-confirm: #5C4900;
 
   /* base-text-colors */

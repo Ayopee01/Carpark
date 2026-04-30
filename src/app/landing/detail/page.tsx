@@ -4,19 +4,54 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-// Import Libraries
 import { useTranslations } from "next-intl";
+
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
 import PaymentPopup from "@/src/app/components/PaymentPopup";
+
 // CSS
 import "@/src/app/css/Detail.css";
+
 // Icons
 import { FaCheck, FaChevronRight } from "react-icons/fa";
 import { MdSupportAgent } from "react-icons/md";
 
 // ------------------------------- Types -------------------------------
+type KioskSearchItem = {
+    id: string;
+    billNo: string;
+    plateNo: string;
+    vehicleType: string;
+    serviceType: string;
+    entryAt: string;
+    exitAt: string | null;
+    calculatedAt: string;
+    exitTimeLimit: string | null;
+    isOverstay: boolean;
+    status: string;
+    baseAmount: number;
+    netAmount: number;
+    totalPaid: number;
+    remainingAmount: number;
+    serviceDisplay: string;
+    durationHour: number;
+    totalMinutes: number;
+    payments: unknown[];
+    qrData: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+type KioskSearchResponse = {
+    success?: boolean;
+    message?: string;
+    items?: KioskSearchItem[];
+};
+
 type DetailData = {
+    id: string;
+    billNo: string;
     plate: string;
     province: string;
     date: string;
@@ -25,9 +60,107 @@ type DetailData = {
     paymentStatus: string;
     amount: number;
     paymentMethod: string;
+    qrData: string;
+    raw: KioskSearchItem;
 };
 
-// ------------------------------- Function -------------------------------
+const STORAGE_KEYS = {
+    searchedPlate: "searchedPlate",
+    plateDetailData: "plateDetailData",
+    plateSearchResponse: "plateSearchResponse",
+} as const;
+
+// ------------------------------- Helpers -------------------------------
+function getErrorMessage(value: unknown, fallback: string) {
+    if (
+        value &&
+        typeof value === "object" &&
+        "message" in value &&
+        typeof value.message === "string"
+    ) {
+        return value.message;
+    }
+
+    return fallback;
+}
+
+function formatThaiDate(value: string) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return new Intl.DateTimeFormat("th-TH-u-ca-buddhist", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Bangkok",
+    }).format(date);
+}
+
+function formatThaiTime(value: string) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return new Intl.DateTimeFormat("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Bangkok",
+    }).format(date);
+}
+
+function formatDuration(totalMinutes: number) {
+    if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return "-";
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours <= 0) {
+        return `${minutes} นาที`;
+    }
+
+    return `${hours} ชั่วโมง ${minutes} นาที`;
+}
+
+function getPaymentStatusLabel(status: string) {
+    switch (status) {
+        case "pending":
+            return "รอชำระเงิน";
+        case "paid":
+        case "completed":
+            return "ชำระเงินแล้ว";
+        case "cancelled":
+            return "ยกเลิก";
+        default:
+            return status || "-";
+    }
+}
+
+function mapKioskItemToDetailData(item: KioskSearchItem): DetailData {
+    return {
+        id: item.id,
+        billNo: item.billNo,
+        plate: item.plateNo,
+        province: "-",
+        date: formatThaiDate(item.entryAt),
+        entryTime: formatThaiTime(item.entryAt),
+        duration: formatDuration(item.totalMinutes),
+        paymentStatus: getPaymentStatusLabel(item.status),
+        amount: item.remainingAmount ?? item.netAmount ?? 0,
+        paymentMethod: item.qrData ? "PromptPay / QR Code" : "PromptPay",
+        qrData: item.qrData,
+        raw: item,
+    };
+}
+
+function saveDetailResult(plate: string, item: KioskSearchItem, response: KioskSearchResponse) {
+    sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plate);
+    sessionStorage.setItem(STORAGE_KEYS.plateDetailData, JSON.stringify(item));
+    sessionStorage.setItem(STORAGE_KEYS.plateSearchResponse, JSON.stringify(response));
+}
+
+// ------------------------------- Component -------------------------------
 function DetailPage() {
     const searchParams = useSearchParams();
     const plate = searchParams.get("plate") ?? "";
@@ -39,8 +172,8 @@ function DetailPage() {
     const [data, setData] = useState<DetailData | null>(null);
     const [fetchError, setFetchError] = useState("");
     const [resolvedPlate, setResolvedPlate] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // ------------------------------- API Call -------------------------------
     useEffect(() => {
         if (!plate) return;
 
@@ -48,27 +181,46 @@ function DetailPage() {
 
         const loadData = async () => {
             try {
-                const res = await fetch(
-                    `/api/mockdata?plate=${encodeURIComponent(plate)}`,
+                setLoading(true);
+                setFetchError("");
+
+                const response = await fetch(
+                    `/api/kiosk/search?plateNo=${encodeURIComponent(plate)}`,
                     {
                         method: "GET",
                         cache: "no-store",
                     }
                 );
 
-                const result = await res.json();
+                const result = (await response.json().catch(() => null)) as
+                    | KioskSearchResponse
+                    | null;
 
                 if (cancelled) return;
 
-                if (!res.ok || !result.ok) {
+                if (!response.ok || !result) {
+                    setResolvedPlate(plate);
+                    setData(null);
+                    setFetchError(
+                        getErrorMessage(result, t("errorLoadFailed"))
+                    );
+                    return;
+                }
+
+                if (!Array.isArray(result.items) || result.items.length === 0) {
                     setResolvedPlate(plate);
                     setData(null);
                     setFetchError(t("errorPlateNotFound"));
                     return;
                 }
 
+                const selectedItem = result.items[0];
+                const mappedData = mapKioskItemToDetailData(selectedItem);
+
+                saveDetailResult(plate, selectedItem, result);
+
                 setResolvedPlate(plate);
-                setData(result.data);
+                setData(mappedData);
                 setFetchError("");
             } catch {
                 if (cancelled) return;
@@ -76,10 +228,14 @@ function DetailPage() {
                 setResolvedPlate(plate);
                 setData(null);
                 setFetchError(t("errorLoadFailed"));
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         };
 
-        loadData();
+        void loadData();
 
         return () => {
             cancelled = true;
@@ -87,6 +243,7 @@ function DetailPage() {
     }, [plate, t]);
 
     const currentData = resolvedPlate === plate ? data : null;
+
     const error = !plate
         ? t("errorNoPlate")
         : resolvedPlate === plate
@@ -95,7 +252,6 @@ function DetailPage() {
 
     const plateValue = currentData?.plate || plate || "-";
 
-    // ----------------------------------- UI -----------------------------------
     return (
         <>
             <section className="detail-page">
@@ -103,6 +259,7 @@ function DetailPage() {
                     <div>
                         <BackBtn />
                     </div>
+
                     <header className="detail-page__header">
                         <h1>{t("title")}</h1>
                         <p>{t("subtitle")}</p>
@@ -110,10 +267,14 @@ function DetailPage() {
 
                     <div className="detail-plate">
                         <div className="detail-plate-card">
-                            <span className="detail-plate-card__label">{t("plateLabel")}</span>
+                            <span className="detail-plate-card__label">
+                                {t("plateLabel")}
+                            </span>
 
                             <div className="detail-plate-card__input">
-                                <span className="detail-plate-card__value">{plateValue}</span>
+                                <span className="detail-plate-card__value">
+                                    {plateValue}
+                                </span>
 
                                 <span
                                     className="detail-plate-card__edit detail-plate-card__edit--done"
@@ -124,23 +285,41 @@ function DetailPage() {
                             </div>
                         </div>
 
-                        <div className="detail-section-title">{t("sectionTitle")}</div>
+                        <div className="detail-section-title">
+                            {t("sectionTitle")}
+                        </div>
 
-                        {error ? <div className="detail-error">{error}</div> : null}
+                        {loading ? (
+                            <div className="detail-error">
+                                กำลังโหลดข้อมูล...
+                            </div>
+                        ) : null}
+
+                        {error ? (
+                            <div className="detail-error">
+                                {error}
+                            </div>
+                        ) : null}
 
                         <div className="detail-info-grid">
                             <div className="detail-info-card">
-                                <span className="detail-info-card__label">{t("dateLabel")}</span>
+                                <span className="detail-info-card__label">
+                                    {t("dateLabel")}
+                                </span>
                                 <strong>{currentData?.date || "-"}</strong>
                             </div>
 
                             <div className="detail-info-card">
-                                <span className="detail-info-card__label">{t("entryTimeLabel")}</span>
+                                <span className="detail-info-card__label">
+                                    {t("entryTimeLabel")}
+                                </span>
                                 <strong>{currentData?.entryTime || "-"}</strong>
                             </div>
 
                             <div className="detail-info-card">
-                                <span className="detail-info-card__label">{t("durationLabel")}</span>
+                                <span className="detail-info-card__label">
+                                    {t("durationLabel")}
+                                </span>
                                 <strong>{currentData?.duration || "-"}</strong>
                             </div>
 
@@ -149,6 +328,7 @@ function DetailPage() {
                                     <span className="detail-info-card__label">
                                         {t("paymentStatusLabel")}
                                     </span>
+
                                     <strong className="detail-info-card__danger">
                                         {currentData?.paymentStatus || "-"}
                                     </strong>
@@ -156,6 +336,7 @@ function DetailPage() {
 
                                 <div className="detail-fee-box">
                                     <span>{t("serviceFee")}</span>
+
                                     <strong>
                                         {currentData?.amount != null
                                             ? `${currentData.amount} ${common("baht")}`
@@ -170,7 +351,9 @@ function DetailPage() {
                         <div className="payment-panel__content">
                             <h2>{t("paymentChannels")}</h2>
 
-                            <p className="payment-panel__note">{t("paymentNote")}</p>
+                            <p className="payment-panel__note">
+                                {t("paymentNote")}
+                            </p>
 
                             <div className="payment-card">
                                 <div className="payment-card__top">
@@ -182,6 +365,7 @@ function DetailPage() {
                                         height={64}
                                         style={{ objectFit: "contain" }}
                                     />
+
                                     <div className="payment-card__tag">
                                         <span>FAST &amp; SECURE</span>
                                         <i />
@@ -208,9 +392,12 @@ function DetailPage() {
                             <div className="payment-panel__help">
                                 <span>{t("paymentProblem")}</span>
 
-                                <Link className="contact_staff" href="tel:+66123123456">
+                                <Link
+                                    className="contact_staff"
+                                    href="tel:+66123123456"
+                                >
                                     <MdSupportAgent />
-                                    <span >{common("contactStaff")}</span>
+                                    <span>{common("contactStaff")}</span>
                                 </Link>
                             </div>
                         </div>

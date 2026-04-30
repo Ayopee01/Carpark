@@ -70,7 +70,7 @@
   width: 55px;
   height: 55px;
   border-radius: 9999px;
-  background: var(--keyboard-confirm);
+  background: var(--theme);
   color: #5C4900;
   font-size: 23px;
   font-weight: 800;
