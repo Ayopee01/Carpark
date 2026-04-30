@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
 function getBaseUrl() {
-    return process.env.BASE_URL;
+    return (process.env.BASE_URL ?? process.env.BaseURL ?? "").replace(/\/$/, "");
+}
+
+function normalizeLogoUrl(logoUrl: unknown, baseUrl: string) {
+    if (!logoUrl || typeof logoUrl !== "string") {
+        return null;
+    }
+
+    if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) {
+        return logoUrl;
+    }
+
+    if (logoUrl.startsWith("/")) {
+        return `${baseUrl}${logoUrl}`;
+    }
+
+    return `${baseUrl}/${logoUrl}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -27,7 +43,21 @@ export async function GET(request: NextRequest) {
 
         const result = await response.json().catch(() => null);
 
-        return NextResponse.json(result, { status: response.status });
+        if (!response.ok || !result) {
+            return NextResponse.json(result, { status: response.status });
+        }
+
+        const normalizedResult = {
+            ...result,
+            theme: {
+                ...result.theme,
+                logoUrl: normalizeLogoUrl(result.theme?.logoUrl, baseUrl),
+            },
+        };
+
+        return NextResponse.json(normalizedResult, {
+            status: response.status,
+        });
     } catch (err) {
         return NextResponse.json(
             {
