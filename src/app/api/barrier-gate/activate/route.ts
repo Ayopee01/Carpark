@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Failed to activate kiosk",
+                message: "Failed to activate barrier gate",
                 error:
                     error instanceof Error
                         ? error.message

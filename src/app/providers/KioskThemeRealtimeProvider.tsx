@@ -18,6 +18,11 @@ import {
     type KioskConfigResponse,
     type KioskThemeConfig,
 } from "@/src/app/lib/kioskTheme";
+import {
+    getDeviceId,
+    getDeviceToken,
+    getStoredDeviceCredential,
+} from "@/src/app/lib/device";
 
 type KioskThemeContextValue = {
     theme: KioskThemeConfig | null;
@@ -104,6 +109,7 @@ export function KioskThemeRealtimeProvider({
     const [systemName, setSystemName] = useState<string | null>(null);
     const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [sseVersion, setSseVersion] = useState(0);
 
     const hasLoggedSseErrorRef = useRef(false);
 
@@ -141,8 +147,8 @@ export function KioskThemeRealtimeProvider({
 
             commitTheme(nextTheme);
             commitMeta({
-                systemName: config.systemName,
-                status: config.status,
+                systemName: config.theme.systemName,
+                status: getStoredDeviceCredential()?.status,
             });
         },
         [commitTheme, commitMeta]
@@ -150,7 +156,7 @@ export function KioskThemeRealtimeProvider({
 
     const refreshTheme = useCallback(async () => {
         try {
-            const response = await fetch("/api/kiosk/config", {
+            const response = await fetch("/api/devices/config", {
                 method: "GET",
                 cache: "no-store",
             });
@@ -197,6 +203,7 @@ export function KioskThemeRealtimeProvider({
 
             try {
                 commitConfig(config);
+                setSseVersion((version) => version + 1);
                 setLoading(false);
             } catch (err) {
                 console.warn("อัปเดต theme จาก Activate ไม่สำเร็จ:", err);
@@ -242,17 +249,22 @@ export function KioskThemeRealtimeProvider({
         let eventSource: EventSource | null = null;
 
         try {
-            eventSource = new EventSource("/api/kiosk/events");
+            const deviceId = getDeviceId();
+            const deviceToken = getDeviceToken();
+            const eventUrl = deviceId
+                ? `/api/client/events?${new URLSearchParams({
+                    deviceId,
+                    ...(deviceToken ? { deviceToken } : {}),
+                }).toString()}`
+                : "/api/kiosk/events";
 
-            const handleThemeUpdated = () => {
-                refreshTheme();
-            };
+            eventSource = new EventSource(eventUrl);
 
-            const handleMessage = (event: MessageEvent) => {
+            const handleThemePayload = (event: MessageEvent) => {
                 const payload = getEventPayload(event);
 
                 if (!payload || typeof payload !== "object") {
-                    return;
+                    return false;
                 }
 
                 const data = payload as {
@@ -261,6 +273,10 @@ export function KioskThemeRealtimeProvider({
                     systemName?: unknown;
                     status?: unknown;
                 };
+
+                if (data.type === "ping") {
+                    return true;
+                }
 
                 if (data.theme) {
                     const nextTheme = normalizeKioskTheme(data.theme);
@@ -279,17 +295,28 @@ export function KioskThemeRealtimeProvider({
                         }
 
                         setLoading(false);
-                        return;
+                        return true;
                     }
                 }
 
                 if (data.type === "theme_updated") {
                     refreshTheme();
+                    return true;
+                }
+
+                return false;
+            };
+
+            const handleThemeUpdated = (event: Event) => {
+                const wasHandled = handleThemePayload(event as MessageEvent);
+
+                if (!wasHandled) {
+                    refreshTheme();
                 }
             };
 
             eventSource.addEventListener("theme_updated", handleThemeUpdated);
-            eventSource.onmessage = handleMessage;
+            eventSource.onmessage = handleThemePayload;
 
             eventSource.onopen = () => {
                 hasLoggedSseErrorRef.current = false;
@@ -320,7 +347,15 @@ export function KioskThemeRealtimeProvider({
         return () => {
             eventSource?.close();
         };
-    }, [commitTheme, commitMeta, refreshTheme]);
+    }, [commitTheme, commitMeta, refreshTheme, sseVersion]);
+
+    useEffect(() => {
+        const pollingTimer = window.setInterval(() => {
+            void refreshTheme();
+        }, 60000);
+
+        return () => window.clearInterval(pollingTimer);
+    }, [refreshTheme]);
 
     const value = useMemo(
         () => ({

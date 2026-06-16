@@ -1,42 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizePlateNo } from "@/src/app/lib/plate";
 import {
     getBackendBaseUrl,
     getForwardedDeviceHeaders,
     readJsonResponse,
 } from "@/src/app/lib/serverApi";
 
-export const dynamic = "force-dynamic";
-
-export async function GET(request: NextRequest) {
+export async function GET(
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
         const baseUrl = getBackendBaseUrl();
-        if (!baseUrl) {
-            return NextResponse.json(
-                { message: "API base URL is not configured" },
-                { status: 500 }
-            );
-        }
-
-        const plateNo = normalizePlateNo(
-            request.nextUrl.searchParams.get("plateNo") ?? ""
-        );
+        const { id } = await context.params;
         const deviceId =
             request.headers.get("x-device-id")?.trim() ||
             request.nextUrl.searchParams.get("deviceId")?.trim();
-
-        if (!plateNo) {
-            return NextResponse.json(
-                { message: "plateNo is required" },
-                { status: 400 }
-            );
-        }
-
-        const params = new URLSearchParams({ plateNo });
+        const params = new URLSearchParams();
         if (deviceId) params.set("deviceId", deviceId);
 
         const response = await fetch(
-            `${baseUrl}/api/v1/client/transaction?${params.toString()}`,
+            `${baseUrl}/api/v1/client/transaction/${encodeURIComponent(id)}?${params}`,
             {
                 headers: getForwardedDeviceHeaders(request),
                 cache: "no-store",
@@ -49,7 +32,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         return NextResponse.json(
             {
-                message: "Unable to connect to the carpark API",
+                message: "Unable to load transaction",
                 reason: error instanceof Error ? error.message : "network_error",
             },
             { status: 502 }

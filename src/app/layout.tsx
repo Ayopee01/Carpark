@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 // Providers
+import BrowserSessionStorageProvider from "@/src/app/providers/BrowserSessionStorageProvider";
+import HeartbeatProvider from "@/src/app/providers/HeartbeatProvider";
 import { KioskThemeRealtimeProvider } from "@/src/app/providers/KioskThemeRealtimeProvider";
 // Components
 import Navbar from "./components/Navbar";
@@ -44,10 +46,16 @@ export default async function RootLayout({
     <html lang={locale} className={`${inter.variable} ${notoThai.variable}`}>
       <body>
         <NextIntlClientProvider>
-          <KioskThemeRealtimeProvider>
-            <Navbar />
-            {children}
-          </KioskThemeRealtimeProvider>
+          <BrowserSessionStorageProvider>
+            <HeartbeatProvider type="barrier-gate">
+              <HeartbeatProvider type="kiosk">
+                <KioskThemeRealtimeProvider>
+                  <Navbar />
+                  {children}
+                </KioskThemeRealtimeProvider>
+              </HeartbeatProvider>
+            </HeartbeatProvider>
+          </BrowserSessionStorageProvider>
         </NextIntlClientProvider>
       </body>
     </html>

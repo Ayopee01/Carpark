@@ -1,72 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getBackendBaseUrl, readJsonResponse } from "@/src/app/lib/serverApi";
 
-function getBaseUrl() {
-    return (process.env.BASE_URL ?? process.env.BaseURL ?? "").replace(/\/$/, "");
-}
+export const dynamic = "force-dynamic";
 
-function normalizeLogoUrl(logoUrl: unknown, baseUrl: string) {
-    if (!logoUrl || typeof logoUrl !== "string") {
-        return null;
-    }
-
-    if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) {
-        return logoUrl;
-    }
-
-    if (logoUrl.startsWith("/")) {
-        return `${baseUrl}${logoUrl}`;
-    }
-
-    return `${baseUrl}/${logoUrl}`;
-}
-
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
-        const baseUrl = getBaseUrl();
-
+        const baseUrl = getBackendBaseUrl();
         if (!baseUrl) {
             return NextResponse.json(
-                { message: "Missing BaseURL or BASE_URL" },
+                { message: "API base URL is not configured" },
                 { status: 500 }
             );
         }
 
-        const authorization = request.headers.get("authorization");
-
-        const response = await fetch(`${baseUrl}/api/v1/kiosk/config`, {
-            method: "GET",
-            headers: {
-                ...(authorization ? { Authorization: authorization } : {}),
-            },
+        const response = await fetch(`${baseUrl}/api/v1/devices/config`, {
             cache: "no-store",
         });
 
-        const result = await response.json().catch(() => null);
-
-        if (!response.ok || !result) {
-            return NextResponse.json(result, { status: response.status });
+        const data = await readJsonResponse(response);
+        if (
+            data &&
+            typeof data === "object" &&
+            "theme" in data &&
+            data.theme &&
+            typeof data.theme === "object"
+        ) {
+            const theme = data.theme as Record<string, unknown>;
+            const logoUrl = theme.logoUrl;
+            if (typeof logoUrl === "string" && logoUrl.startsWith("/uploads")) {
+                theme.logoUrl = `${baseUrl}${logoUrl}`;
+            }
         }
 
-        const normalizedResult = {
-            ...result,
-            theme: {
-                ...result.theme,
-                logoUrl: normalizeLogoUrl(result.theme?.logoUrl, baseUrl),
-            },
-        };
-
-        return NextResponse.json(normalizedResult, {
+        return NextResponse.json(data, {
             status: response.status,
         });
-    } catch (err) {
+    } catch (error) {
         return NextResponse.json(
             {
-                message:
-                    err instanceof Error
-                        ? err.message
-                        : "โหลดข้อมูล kiosk config ไม่สำเร็จ",
+                message: "Unable to load device config",
+                reason: error instanceof Error ? error.message : "network_error",
             },
-            { status: 500 }
+            { status: 502 }
         );
     }
 }

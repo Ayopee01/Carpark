@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -9,6 +9,21 @@ import { useTranslations } from "next-intl";
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
 import PaymentPopup from "@/src/app/components/PaymentPopup";
+import {
+    getPlateNoValidationMessage,
+    isValidPlateNo,
+    normalizePlateNo,
+} from "@/src/app/lib/plate";
+import {
+    getActivatedDeviceType,
+    getDeviceAuthHeaders,
+    getDeviceId,
+    handleDeviceResponseStatus,
+} from "@/src/app/lib/device";
+import type {
+    ClientPaymentResponse,
+    ClientTransactionResponse,
+} from "@/src/app/type/client";
 
 // CSS
 import "@/src/app/css/Detail.css";
@@ -18,37 +33,6 @@ import { FaCheck, FaChevronRight } from "react-icons/fa";
 import { MdSupportAgent } from "react-icons/md";
 
 // ------------------------------- Types -------------------------------
-type KioskSearchItem = {
-    id: string;
-    billNo: string;
-    plateNo: string;
-    vehicleType: string;
-    serviceType: string;
-    entryAt: string;
-    exitAt: string | null;
-    calculatedAt: string;
-    exitTimeLimit: string | null;
-    isOverstay: boolean;
-    status: string;
-    baseAmount: number;
-    netAmount: number;
-    totalPaid: number;
-    remainingAmount: number;
-    serviceDisplay: string;
-    durationHour: number;
-    totalMinutes: number;
-    payments: unknown[];
-    qrData: string;
-    createdAt: string;
-    updatedAt: string;
-};
-
-type KioskSearchResponse = {
-    success?: boolean;
-    message?: string;
-    items?: KioskSearchItem[];
-};
-
 type DetailData = {
     id: string;
     billNo: string;
@@ -61,7 +45,7 @@ type DetailData = {
     amount: number;
     paymentMethod: string;
     qrData: string;
-    raw: KioskSearchItem;
+    raw: ClientTransactionResponse;
 };
 
 const STORAGE_KEYS = {
@@ -84,7 +68,8 @@ function getErrorMessage(value: unknown, fallback: string) {
     return fallback;
 }
 
-function formatThaiDate(value: string) {
+function formatThaiDate(value: string | null) {
+    if (!value) return "-";
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) return "-";
@@ -97,7 +82,8 @@ function formatThaiDate(value: string) {
     }).format(date);
 }
 
-function formatThaiTime(value: string) {
+function formatThaiTime(value: string | null) {
+    if (!value) return "-";
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) return "-";
@@ -137,33 +123,36 @@ function getPaymentStatusLabel(status: string) {
     }
 }
 
-function mapKioskItemToDetailData(item: KioskSearchItem): DetailData {
+function mapKioskItemToDetailData(item: ClientTransactionResponse): DetailData {
     return {
-        id: item.id,
+        id: item.transactionId,
         billNo: item.billNo,
         plate: item.plateNo,
         province: "-",
         date: formatThaiDate(item.entryAt),
         entryTime: formatThaiTime(item.entryAt),
-        duration: formatDuration(item.totalMinutes),
+        duration: item.duration.display || formatDuration(item.duration.totalMinutes),
         paymentStatus: getPaymentStatusLabel(item.status),
-        amount: item.remainingAmount ?? item.netAmount ?? 0,
+        amount: item.amount.remainingAmount,
         paymentMethod: item.qrData ? "PromptPay / QR Code" : "PromptPay",
         qrData: item.qrData,
         raw: item,
     };
 }
 
-function saveDetailResult(plate: string, item: KioskSearchItem, response: KioskSearchResponse) {
+function saveDetailResult(plate: string, item: ClientTransactionResponse) {
     sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plate);
     sessionStorage.setItem(STORAGE_KEYS.plateDetailData, JSON.stringify(item));
-    sessionStorage.setItem(STORAGE_KEYS.plateSearchResponse, JSON.stringify(response));
+    sessionStorage.setItem(STORAGE_KEYS.plateSearchResponse, JSON.stringify(item));
 }
 
 // ------------------------------- Component -------------------------------
 function DetailPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
-    const plate = searchParams.get("plate") ?? "";
+    const plate = normalizePlateNo(
+        searchParams.get("plateNo") ?? searchParams.get("plate") ?? ""
+    );
 
     const t = useTranslations("Detail");
     const common = useTranslations("Common");
@@ -175,7 +164,7 @@ function DetailPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (!plate) return;
+        if (!plate || !isValidPlateNo(plate)) return;
 
         let cancelled = false;
 
@@ -184,17 +173,34 @@ function DetailPage() {
                 setLoading(true);
                 setFetchError("");
 
+                const deviceType = getActivatedDeviceType() ?? "kiosk";
+                const deviceId = getDeviceId(deviceType)?.trim() ?? "";
+                const query = new URLSearchParams({
+                    plateNo: plate,
+                    deviceId,
+                });
+
                 const response = await fetch(
-                    `/api/kiosk/search?plateNo=${encodeURIComponent(plate)}`,
+                    `/api/kiosk/search?${query.toString()}`,
                     {
                         method: "GET",
+                        headers: getDeviceAuthHeaders(deviceType),
                         cache: "no-store",
                     }
                 );
 
                 const result = (await response.json().catch(() => null)) as
-                    | KioskSearchResponse
+                    | ClientTransactionResponse
                     | null;
+
+                if (
+                    handleDeviceResponseStatus(
+                        response,
+                        result as { message?: string; status?: string } | null
+                    )
+                ) {
+                    return;
+                }
 
                 if (cancelled) return;
 
@@ -207,17 +213,9 @@ function DetailPage() {
                     return;
                 }
 
-                if (!Array.isArray(result.items) || result.items.length === 0) {
-                    setResolvedPlate(plate);
-                    setData(null);
-                    setFetchError(t("errorPlateNotFound"));
-                    return;
-                }
+                const mappedData = mapKioskItemToDetailData(result);
 
-                const selectedItem = result.items[0];
-                const mappedData = mapKioskItemToDetailData(selectedItem);
-
-                saveDetailResult(plate, selectedItem, result);
+                saveDetailResult(plate, result);
 
                 setResolvedPlate(plate);
                 setData(mappedData);
@@ -246,6 +244,8 @@ function DetailPage() {
 
     const error = !plate
         ? t("errorNoPlate")
+        : !isValidPlateNo(plate)
+            ? getPlateNoValidationMessage()
         : resolvedPlate === plate
             ? fetchError
             : "";
@@ -408,7 +408,13 @@ function DetailPage() {
             <PaymentPopup
                 open={isPopupOpen}
                 onClose={() => setIsPopupOpen(false)}
-                amount={currentData?.amount ?? 0}
+                transaction={currentData?.raw ?? null}
+                onSuccess={(payment: ClientPaymentResponse) => {
+                    setData(mapKioskItemToDetailData(payment.transaction));
+                    window.setTimeout(() => {
+                        router.replace("/landing/dashboard");
+                    }, 3000);
+                }}
             />
         </>
     );

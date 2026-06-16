@@ -16,46 +16,13 @@ import {
     saveKioskThemeToStorage,
     type KioskConfigResponse,
 } from "@/src/app/lib/kioskTheme";
+import { sendHeartbeat } from "@/src/app/lib/heartbeat";
+import { saveDeviceCredential } from "@/src/app/lib/device";
+import type { DeviceActivateResponse } from "@/src/app/type/client";
 // CSS
 import "@/src/app/css/KioskActivate.css";
 
-type KioskActivateResponse = {
-    success: boolean;
-    message: string;
-    deviceId?: string;
-    kiosk?: {
-        deviceId: string;
-        name: string;
-        location: string;
-        ip: string;
-        version: string;
-        status: string;
-        firstSeen: string;
-        lastSeen: string;
-    };
-};
-
 const MAX_CODE_LENGTH = 6;
-
-const KIOSK_STORAGE_KEYS = {
-    activated: "kioskActivated",
-    activationCode: "kioskActivationCode",
-    deviceId: "kioskDeviceId",
-    info: "kioskInfo",
-    name: "kioskName",
-    location: "kioskLocation",
-    ip: "kioskIp",
-    version: "kioskVersion",
-    status: "kioskStatus",
-    firstSeen: "kioskFirstSeen",
-    lastSeen: "kioskLastSeen",
-    activatedAt: "kioskActivatedAt",
-    config: "kioskConfig",
-    systemName: "kioskSystemName",
-    logoUrl: "kioskLogoUrl",
-} as const;
-
-const KIOSK_META_STORAGE_KEY = "kioskConfigMeta";
 const KIOSK_CONFIG_UPDATED_EVENT = "kiosk-config-updated";
 
 const numericKeyboardKeys = [
@@ -73,56 +40,12 @@ const numericKeyboardKeys = [
     "enter",
 ] as const;
 
-function saveKioskActivateToLocalStorage(
-    activationCode: string,
-    result: KioskActivateResponse
-) {
-    const deviceId = result.deviceId ?? result.kiosk?.deviceId ?? "";
-
-    localStorage.setItem(KIOSK_STORAGE_KEYS.activated, "true");
-    localStorage.setItem(KIOSK_STORAGE_KEYS.activationCode, activationCode);
-    localStorage.setItem(KIOSK_STORAGE_KEYS.deviceId, deviceId);
-    localStorage.setItem(
-        KIOSK_STORAGE_KEYS.info,
-        JSON.stringify(result.kiosk ?? null)
-    );
-    localStorage.setItem(
-        KIOSK_STORAGE_KEYS.activatedAt,
-        new Date().toISOString()
-    );
-
-    if (result.kiosk) {
-        localStorage.setItem(KIOSK_STORAGE_KEYS.name, result.kiosk.name);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.location, result.kiosk.location);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.ip, result.kiosk.ip);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.version, result.kiosk.version);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.status, result.kiosk.status);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.firstSeen, result.kiosk.firstSeen);
-        localStorage.setItem(KIOSK_STORAGE_KEYS.lastSeen, result.kiosk.lastSeen);
-    }
-
-    return deviceId;
-}
-
 function saveKioskConfigToLocalStorage(config: KioskConfigResponse) {
     const nextTheme = normalizeKioskTheme(config.theme);
 
     if (!nextTheme) {
         throw new Error("ข้อมูล themeColor จาก API ไม่ถูกต้อง");
     }
-
-    localStorage.setItem(KIOSK_STORAGE_KEYS.config, JSON.stringify(config));
-    localStorage.setItem(KIOSK_STORAGE_KEYS.systemName, config.systemName);
-    localStorage.setItem(KIOSK_STORAGE_KEYS.status, config.status);
-    localStorage.setItem(KIOSK_STORAGE_KEYS.logoUrl, nextTheme.logoUrl ?? "");
-
-    localStorage.setItem(
-        KIOSK_META_STORAGE_KEY,
-        JSON.stringify({
-            systemName: config.systemName,
-            status: config.status,
-        })
-    );
 
     saveKioskThemeToStorage(nextTheme);
     applyKioskThemeToRoot(nextTheme);
@@ -207,7 +130,7 @@ function KioskActivatePage() {
             setError("");
             setSuccessMessage("");
 
-            const response = await fetch("/api/kiosk/activate", {
+            const response = await fetch("/api/client/activate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -219,7 +142,7 @@ function KioskActivatePage() {
             });
 
             const result = (await response.json().catch(() => null)) as
-                | KioskActivateResponse
+                | DeviceActivateResponse
                 | null;
 
             if (!response.ok || !result?.success) {
@@ -228,16 +151,30 @@ function KioskActivatePage() {
                 );
             }
 
-            const deviceId = saveKioskActivateToLocalStorage(
-                activationCode,
-                result
-            );
+            saveDeviceCredential({
+                deviceId: result.deviceId,
+                deviceToken: result.deviceToken,
+                deviceType: result.deviceType,
+                deviceName: result.deviceName,
+                location: result.location,
+                status: result.status,
+                activatedAt: new Date().toISOString(),
+            });
 
-            if (!deviceId) {
-                throw new Error("ไม่พบ deviceId จากการ Activate");
+            if (result.deviceType === "barrier_gate") {
+                await sendHeartbeat("barrier-gate").catch((err) => {
+                    console.warn("barrier-gate heartbeat after activation failed:", err);
+                });
+
+                setSuccessMessage(result.message || "Activation successful");
+
+                setTimeout(() => {
+                    router.replace("/landing/barrier-gate");
+                }, 800);
+                return;
             }
 
-            const configResponse = await fetch("/api/kiosk/config", {
+            const configResponse = await fetch("/api/devices/config", {
                 method: "GET",
                 cache: "no-store",
             });
@@ -251,6 +188,10 @@ function KioskActivatePage() {
             }
 
             saveKioskConfigToLocalStorage(kioskConfig);
+
+            await sendHeartbeat("kiosk").catch((err) => {
+                console.warn("kiosk heartbeat after activation failed:", err);
+            });
 
             setSuccessMessage(result.message || "Activation successful");
 

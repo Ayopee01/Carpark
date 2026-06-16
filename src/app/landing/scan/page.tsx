@@ -4,6 +4,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import {
+    getPlateNoValidationMessage,
+    isValidPlateNo,
+    normalizePlateNo,
+} from "@/src/app/lib/plate";
+import {
+    getDeviceAuthHeaders,
+    getDeviceId,
+    handleDeviceResponseStatus,
+} from "@/src/app/lib/device";
+import type { ClientTransactionResponse } from "@/src/app/type/client";
 
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
@@ -20,38 +31,6 @@ const STORAGE_KEYS = {
     plateSearchResponse: "plateSearchResponse",
 } as const;
 
-type KioskSearchItem = {
-    id: string;
-    billNo: string;
-    plateNo: string;
-    vehicleType: string;
-    serviceType: string;
-    entryAt: string;
-    exitAt: string | null;
-    calculatedAt: string;
-    exitTimeLimit: string | null;
-    isOverstay: boolean;
-    status: string;
-    baseAmount: number;
-    netAmount: number;
-    totalPaid: number;
-    remainingAmount: number;
-    serviceDisplay: string;
-    durationHour: number;
-    totalMinutes: number;
-    payments: unknown[];
-    qrData: string;
-    createdAt: string;
-    updatedAt: string;
-};
-
-type KioskSearchResponse = {
-    success?: boolean;
-    message?: string;
-    count?: number;
-    items?: KioskSearchItem[];
-};
-
 function getErrorMessage(value: unknown, fallback: string) {
     if (
         value &&
@@ -66,18 +45,23 @@ function getErrorMessage(value: unknown, fallback: string) {
 }
 
 async function fetchKioskSearch(plateNo: string) {
+    const deviceId = getDeviceId("kiosk")?.trim() ?? "";
     const searchParams = new URLSearchParams({
         plateNo,
+        deviceId,
     });
 
     const response = await fetch(`${SEARCH_API_PATH}?${searchParams.toString()}`, {
         method: "GET",
+        headers: getDeviceAuthHeaders("kiosk"),
         cache: "no-store",
     });
 
     const result = (await response.json().catch(() => null)) as
-        | KioskSearchResponse
+        | ClientTransactionResponse
         | null;
+
+    handleDeviceResponseStatus(response, result as { message?: string; status?: string } | null);
 
     return {
         status: response.status,
@@ -85,13 +69,11 @@ async function fetchKioskSearch(plateNo: string) {
     };
 }
 
-function saveSearchResult(plateNo: string, response: KioskSearchResponse) {
-    const firstItem = response.items?.[0] ?? null;
-
+function saveSearchResult(plateNo: string, response: ClientTransactionResponse) {
     sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNo);
     sessionStorage.setItem(
         STORAGE_KEYS.plateDetailData,
-        JSON.stringify(firstItem)
+        JSON.stringify(response)
     );
     sessionStorage.setItem(
         STORAGE_KEYS.plateSearchResponse,
@@ -165,9 +147,16 @@ function ScanPage() {
 
     const handleSearch = useCallback(
         async (scanValue: string) => {
-            const trimmedPlate = extractPlateFromScanValue(scanValue);
+            const trimmedPlate = normalizePlateNo(extractPlateFromScanValue(scanValue));
 
             if (!trimmedPlate || loadingRef.current) return;
+
+            if (!isValidPlateNo(trimmedPlate)) {
+                setScannedPlate(trimmedPlate);
+                setError(getPlateNoValidationMessage());
+                resetScanBuffer();
+                return;
+            }
 
             try {
                 loadingRef.current = true;
@@ -191,14 +180,10 @@ function ScanPage() {
                     );
                 }
 
-                if (!Array.isArray(result.items) || result.items.length === 0) {
-                    throw new Error("ไม่พบข้อมูลทะเบียนนี้ในระบบ");
-                }
-
                 saveSearchResult(trimmedPlate, result);
 
                 router.push(
-                    `/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`
+                    `/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`
                 );
             } catch (err) {
                 setError(

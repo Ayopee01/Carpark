@@ -14,6 +14,17 @@ import PlateKeyboard, {
 } from "@/src/app/components/PlateKeyboard";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
+import {
+  getPlateNoValidationMessage,
+  isValidPlateNo,
+  normalizePlateNo,
+} from "@/src/app/lib/plate";
+import {
+  getDeviceAuthHeaders,
+  getDeviceId,
+  handleDeviceResponseStatus,
+} from "@/src/app/lib/device";
+import type { ClientTransactionResponse } from "@/src/app/type/client";
 
 import "@/src/app/css/Search.css";
 
@@ -25,37 +36,6 @@ const STORAGE_KEYS = {
   plateDetailData: "plateDetailData",
   plateSearchResponse: "plateSearchResponse",
 } as const;
-
-type KioskSearchItem = {
-  id: string;
-  billNo: string;
-  plateNo: string;
-  vehicleType: string;
-  serviceType: string;
-  entryAt: string;
-  exitAt: string | null;
-  calculatedAt: string;
-  exitTimeLimit: string | null;
-  isOverstay: boolean;
-  status: string;
-  baseAmount: number;
-  netAmount: number;
-  totalPaid: number;
-  remainingAmount: number;
-  serviceDisplay: string;
-  durationHour: number;
-  totalMinutes: number;
-  payments: unknown[];
-  qrData: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type KioskSearchResponse = {
-  success?: boolean;
-  message?: string;
-  items?: KioskSearchItem[];
-};
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -75,6 +55,7 @@ function getErrorMessage(value: unknown, fallback: string) {
 
 async function fetchKioskSearchWithProgress(
   plateNo: string,
+  deviceId: string,
   onProgress: (value: number) => void
 ) {
   onProgress(15);
@@ -84,18 +65,22 @@ async function fetchKioskSearchWithProgress(
 
     const searchParams = new URLSearchParams({
       plateNo,
+      deviceId,
     });
 
     const response = await fetch(`${SEARCH_API_PATH}?${searchParams.toString()}`, {
       method: "GET",
+      headers: getDeviceAuthHeaders("kiosk"),
       cache: "no-store",
     });
 
     onProgress(92);
 
     const result = (await response.json().catch(() => null)) as
-      | KioskSearchResponse
+      | ClientTransactionResponse
       | null;
+
+    handleDeviceResponseStatus(response, result as { message?: string; status?: string } | null);
 
     onProgress(100);
 
@@ -146,14 +131,12 @@ function SearchPage() {
 
   const saveSearchResult = (
     plateNumber: string,
-    response: KioskSearchResponse
+    response: ClientTransactionResponse
   ) => {
-    const firstItem = response.items?.[0] ?? null;
-
     sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNumber);
     sessionStorage.setItem(
       STORAGE_KEYS.plateDetailData,
-      JSON.stringify(firstItem)
+      JSON.stringify(response)
     );
     sessionStorage.setItem(
       STORAGE_KEYS.plateSearchResponse,
@@ -183,10 +166,22 @@ function SearchPage() {
   };
 
   const handleConfirm = async () => {
-    const trimmedPlate = plate.trim();
+    const trimmedPlate = normalizePlateNo(plate);
 
     if (!trimmedPlate) {
       setError(t("errorRequired"));
+      return;
+    }
+
+    if (!isValidPlateNo(trimmedPlate)) {
+      setError(getPlateNoValidationMessage());
+      return;
+    }
+
+    const deviceId = getDeviceId("kiosk")?.trim();
+
+    if (!deviceId) {
+      setError("deviceId is required");
       return;
     }
 
@@ -196,6 +191,7 @@ function SearchPage() {
     try {
       const { status, result } = await fetchKioskSearchWithProgress(
         trimmedPlate,
+        deviceId,
         setProgress
       );
 
@@ -217,17 +213,11 @@ function SearchPage() {
         return;
       }
 
-      if (!Array.isArray(result.items) || result.items.length === 0) {
-        await completeLoading();
-        setShowNotFoundPopup(true);
-        return;
-      }
-
       saveSearchResult(trimmedPlate, result);
 
       await completeLoading();
 
-      router.push(`/landing/detail?plate=${encodeURIComponent(trimmedPlate)}`);
+      router.push(`/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`);
     } catch (error) {
       console.error("Unexpected search error:", error);
       setError(t("errorUnexpected"));
