@@ -9,13 +9,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import BackBtn from "@/src/app/components/BackBtn";
+import PlateCandidatePopup from "@/src/app/components/PlateCandidatePopup";
 import PlateKeyboard, {
   plateKeyboardRows,
 } from "@/src/app/components/PlateKeyboard";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
 import {
-  getPlateNoValidationMessage,
+  MIN_PLATE_NO_LENGTH,
   isValidPlateNo,
   normalizePlateNo,
 } from "@/src/app/lib/plate";
@@ -24,34 +25,21 @@ import {
   getDeviceId,
   handleDeviceResponseStatus,
 } from "@/src/app/lib/device";
-import type { ClientTransactionResponse } from "@/src/app/type/client";
+import {
+  isAlreadyProcessedTransactionError,
+  isMultipleTransactionResponse,
+  isSelectableTransactionCandidate,
+} from "@/src/app/lib/transactionStatus";
+import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
+import type {
+  ClientTransactionCandidate,
+  ClientTransactionResponse,
+  ClientTransactionSearchResponse,
+} from "@/src/app/type/client";
 
 import "@/src/app/css/Search.css";
 
-const SEARCH_API_PATH = "/api/kiosk/search";
-const PRELOAD_DELAY_MS = 0;
-
-const STORAGE_KEYS = {
-  searchedPlate: "searchedPlate",
-  plateDetailData: "plateDetailData",
-  plateSearchResponse: "plateSearchResponse",
-} as const;
-
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-function getErrorMessage(value: unknown, fallback: string) {
-  if (
-    value &&
-    typeof value === "object" &&
-    "message" in value &&
-    typeof value.message === "string"
-  ) {
-    return value.message;
-  }
-
-  return fallback;
-}
+const SEARCH_API_PATH = "/api/client/transaction";
 
 async function fetchKioskSearchWithProgress(
   plateNo: string,
@@ -77,16 +65,21 @@ async function fetchKioskSearchWithProgress(
     onProgress(92);
 
     const result = (await response.json().catch(() => null)) as
-      | ClientTransactionResponse
+      | ClientTransactionSearchResponse
+      | { message?: string; status?: string }
       | null;
 
-    handleDeviceResponseStatus(response, result as { message?: string; status?: string } | null);
+    const wasRedirected = handleDeviceResponseStatus(
+      response,
+      result as { message?: string; status?: string } | null
+    );
 
     onProgress(100);
 
     return {
       status: response.status,
       result,
+      wasRedirected,
     };
   } catch (error) {
     onProgress(100);
@@ -102,21 +95,26 @@ function SearchPage() {
   const [plate, setPlate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAlreadyProcessedError, setIsAlreadyProcessedError] = useState(false);
   const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
+  const [candidatePlates, setCandidatePlates] = useState<ClientTransactionCandidate[]>([]);
+  const [showCandidatePopup, setShowCandidatePopup] = useState(false);
 
   const clearError = () => {
     setError("");
+    setIsAlreadyProcessedError(false);
   };
 
   const resetSearchState = () => {
     clearError();
     setShowNotFoundPopup(false);
+    setShowCandidatePopup(false);
+    setCandidatePlates([]);
     setProgress(0);
   };
 
-  const completeLoading = async () => {
+  const completeLoading = () => {
     setProgress(100);
-    await wait(PRELOAD_DELAY_MS);
   };
 
   const updatePlate = (value: string | ((prev: string) => string)) => {
@@ -127,21 +125,6 @@ function SearchPage() {
     );
 
     clearError();
-  };
-
-  const saveSearchResult = (
-    plateNumber: string,
-    response: ClientTransactionResponse
-  ) => {
-    sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNumber);
-    sessionStorage.setItem(
-      STORAGE_KEYS.plateDetailData,
-      JSON.stringify(response)
-    );
-    sessionStorage.setItem(
-      STORAGE_KEYS.plateSearchResponse,
-      JSON.stringify(response)
-    );
   };
 
   const handleMobileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -165,8 +148,8 @@ function SearchPage() {
     updatePlate((prev) => prev.slice(0, -1));
   };
 
-  const handleConfirm = async () => {
-    const trimmedPlate = normalizePlateNo(plate);
+  const searchPlate = async (plateValue: string) => {
+    const trimmedPlate = normalizePlateNo(plateValue);
 
     if (!trimmedPlate) {
       setError(t("errorRequired"));
@@ -174,14 +157,14 @@ function SearchPage() {
     }
 
     if (!isValidPlateNo(trimmedPlate)) {
-      setError(getPlateNoValidationMessage());
+      setError(t("errorPlateTooShort", { min: MIN_PLATE_NO_LENGTH }));
       return;
     }
 
     const deviceId = getDeviceId("kiosk")?.trim();
 
     if (!deviceId) {
-      setError("deviceId is required");
+      setError(t("errorDeviceRequired"));
       return;
     }
 
@@ -189,33 +172,66 @@ function SearchPage() {
     resetSearchState();
 
     try {
-      const { status, result } = await fetchKioskSearchWithProgress(
+      const { status, result, wasRedirected } = await fetchKioskSearchWithProgress(
         trimmedPlate,
         deviceId,
         setProgress
       );
 
-      if (!result) {
-        setError(t("errorInvalidData"));
-        await completeLoading();
-        return;
-      }
+      if (wasRedirected) return;
 
       if (status === 404) {
-        await completeLoading();
+        completeLoading();
         setShowNotFoundPopup(true);
         return;
       }
 
-      if (status >= 400) {
-        setError(getErrorMessage(result, t("errorSearchFailed")));
-        await completeLoading();
+      if (result && isMultipleTransactionResponse(result)) {
+        const selectableCandidates = result.candidates.filter(
+          isSelectableTransactionCandidate
+        );
+
+        if (selectableCandidates.length === 0) {
+          setIsAlreadyProcessedError(true);
+          setError(t("errorAlreadyProcessed"));
+          completeLoading();
+          return;
+        }
+
+        if (selectableCandidates.length === 1) {
+          setPlate(selectableCandidates[0].plateNo);
+          await searchPlate(selectableCandidates[0].plateNo);
+          return;
+        }
+
+        setCandidatePlates(selectableCandidates);
+        setShowCandidatePopup(true);
+        completeLoading();
         return;
       }
 
-      saveSearchResult(trimmedPlate, result);
+      if (status >= 400) {
+        const isAlreadyProcessed = isAlreadyProcessedTransactionError(status, result);
 
-      await completeLoading();
+        setIsAlreadyProcessedError(isAlreadyProcessed);
+        setError(
+          isAlreadyProcessed
+            ? t("errorAlreadyProcessed")
+            : t("errorSearchFailed")
+        );
+        completeLoading();
+        return;
+      }
+
+      if (!result) {
+        setError(t("errorInvalidData"));
+        completeLoading();
+        return;
+      }
+
+      savePlateTransactionResult(trimmedPlate, result as ClientTransactionResponse);
+
+      completeLoading();
 
       router.push(`/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`);
     } catch (error) {
@@ -224,6 +240,17 @@ function SearchPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirm = async () => {
+    await searchPlate(plate);
+  };
+
+  const handleSelectCandidate = (plateNo: string) => {
+    setPlate(plateNo);
+    setShowCandidatePopup(false);
+    setCandidatePlates([]);
+    void searchPlate(plateNo);
   };
 
   const confirmText = loading ? t("loadingButton") : t("confirm");
@@ -276,7 +303,13 @@ function SearchPage() {
               />
             </div>
 
-            <p className={error ? "search-page__error" : "search-page__subtitle"}>
+            <p
+              className={
+                error
+                  ? `search-page__error ${isAlreadyProcessedError ? "search-page__error--processed" : ""}`
+                  : "search-page__subtitle"
+              }
+            >
               {error || t("subtitle")}
             </p>
           </div>
@@ -293,23 +326,24 @@ function SearchPage() {
       </section>
 
       {loading ? (
-        <div className="plate-popup__overlay">
-          <div className="plate-popup">
-            <div className="plate-popup__top">
-              <PreloadPopup
-                statusText={t("processing")}
-                title={t("loadingData")}
-                progress={progress}
-              />
-            </div>
-          </div>
-        </div>
+        <PreloadPopup
+          statusText={t("processing")}
+          title={t("loadingData")}
+          progress={progress}
+        />
       ) : null}
 
       <PlateNotFoundPopup
         open={showNotFoundPopup}
         onClose={() => setShowNotFoundPopup(false)}
         onRetry={() => setShowNotFoundPopup(false)}
+      />
+
+      <PlateCandidatePopup
+        open={showCandidatePopup}
+        candidates={candidatePlates}
+        onClose={() => setShowCandidatePopup(false)}
+        onSelect={handleSelectCandidate}
       />
     </>
   );

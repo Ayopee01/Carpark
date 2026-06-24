@@ -8,7 +8,10 @@
     "paymentService": "服务支付",
     "baht": "泰铢",
     "seconds": "秒",
-    "pleaseWait": "请稍候"
+    "pleaseWait": "请稍候",
+    "enter": "确认",
+    "loading": "加载中...",
+    "promptPay": "PromptPay"
   },
   "SideMenu": {
     "help": "帮助",
@@ -39,7 +42,17 @@
   "Scan": {
     "subtitle": "扫描以搜索车牌号",
     "hintLine1": "请将车牌或二维码放置在",
-    "hintLine2": "框内进行扫描"
+    "hintLine2": "框内进行扫描",
+    "viewfinderAlt": "扫描框",
+    "resultLabel": "扫描器接收到的车牌号",
+    "waitingInput": "等待输入...",
+    "searching": "正在搜索车牌信息...",
+    "errorInvalidData": "API 返回的数据无效",
+    "errorNotFound": "未找到该车牌信息",
+    "errorSearchFailed": "车牌搜索失败",
+    "errorAlreadyProcessed": "此交易已被处理",
+    "errorUnexpected": "发生错误，请重试",
+    "errorPlateTooShort": "车牌号至少需要 {min} 个字符"
   },
   "Search": {
     "subtitle": "请输入您的车牌号",
@@ -48,7 +61,10 @@
     "errorRequired": "请输入车牌号",
     "errorInvalidData": "数据格式无效",
     "errorSearchFailed": "搜索失败",
+    "errorAlreadyProcessed": "此交易已被处理",
     "errorUnexpected": "发生未知错误",
+    "errorDeviceRequired": "缺少设备 ID，请先激活设备",
+    "errorPlateTooShort": "车牌号至少需要 {min} 个字符",
     "confirm": "确认",
     "loadingButton": "加载中...",
     "processing": "处理中",
@@ -70,13 +86,89 @@
     "paymentProblem": "付款时遇到问题？",
     "errorNoPlate": "未找到车牌号",
     "errorPlateNotFound": "未找到该车牌信息",
-    "errorLoadFailed": "加载数据失败"
+    "errorLoadFailed": "加载数据失败",
+    "loading": "正在加载数据...",
+    "minute": "{count} 分钟",
+    "hourMinute": "{hours} 小时 {minutes} 分钟",
+    "durationYear": "{count} 年",
+    "durationMonth": "{count} 个月",
+    "durationDay": "{count} 天",
+    "durationHour": "{count} 小时",
+    "durationMinute": "{count} 分钟",
+    "statusPending": "未付款",
+    "statusPartiallyPaid": "部分付款",
+    "statusPaidWaitingExit": "已付款，等待离场",
+    "statusCompleted": "已完成",
+    "statusCancelled": "已取消",
+    "fastSecure": "快速且安全"
   },
   "PaymentPopup": {
     "title": "支付",
     "caption": "扫描付款",
     "payWithin": "请在以下时间内完成支付",
-    "cancel": "取消"
+    "cancel": "取消",
+    "successTitle": "支付成功",
+    "successPlate": "车牌 {plateNo}",
+    "exitWithin": "请在 {exitTimeLimit} 前离场",
+    "returningHome": "正在返回首页...",
+    "confirmPayment": "确认付款",
+    "confirming": "正在确认...",
+    "paymentFailed": "无法处理付款，请重试",
+    "qrAlt": "付款二维码"
+  },
+  "Activate": {
+    "title": "Smart Carpark",
+    "subtitle": "请输入此设备的激活码",
+    "codeLabel": "激活码",
+    "hint": "请输入管理员生成的激活码",
+    "footer": "如果激活码已过期，请从管理后台生成新的激活码",
+    "delete": "删除",
+    "errorRequired": "请输入激活码",
+    "errorLength": "请输入完整的 {length} 位激活码",
+    "errorActivateFailed": "设备激活失败",
+    "errorThemeInvalid": "API 返回的主题数据无效",
+    "errorConfigFailed": "设备配置加载失败",
+    "errorUnexpected": "发生错误，请重试",
+    "successFallback": "激活成功",
+    "redirectingDashboard": "{message} 正在进入 Dashboard...",
+    "redirectingBarrier": "{message} 正在进入 Barrier Gate..."
+  },
+  "BarrierGate": {
+    "title": "Barrier Gate",
+    "subtitle": "等待摄像头输入 plateNo 或 transactionId",
+    "inputLabel": "plateNo / transactionId",
+    "waiting": "等待中...",
+    "checking": "正在检查交易...",
+    "lastDetected": "上次识别：{value}",
+    "inputHint": "请从 LPR、摄像头或外部设备提交输入",
+    "connectionConnecting": "正在连接摄像头",
+    "connectionConnected": "摄像头已连接",
+    "connectionDisconnected": "摄像头连接中断，正在重连",
+    "gateInfo": "{gateId} / 方向 {direction}",
+    "gateInfoAll": "同时接收 GATE-A / IN 和 GATE-A / OUT",
+    "lprDetectedAt": "识别时间：{value}",
+    "transactionId": "交易编号",
+    "eventStatus": "状态",
+    "eventAction": "操作",
+    "actionOpenGate": "允许通行，正在开启道闸",
+    "actionExitOpenGate": "感谢您的使用，正在开启道闸",
+    "actionPaymentRequired": "需要付款或补缴费用",
+    "actionIgnoreDuplicate": "已忽略重复事件",
+    "actionActiveTransaction": "该车牌仍有进行中的停车交易",
+    "actionTransactionNotFound": "未找到出口停车交易",
+    "remaining": "剩余金额",
+    "reset": "重置",
+    "errorForbidden": "此交易无法处理",
+    "errorNotFound": "未找到停车交易",
+    "errorCheckFailed": "交易检查失败",
+    "denyUnpaid": "仍有未付款项，请在自助机付款",
+    "denyProcessed": "此交易已处理或已取消",
+    "opened": "道闸已成功打开",
+    "offline": "设备无法连接到系统"
+  },
+  "Maintenance": {
+    "title": "设备维护中",
+    "description": "请联系管理员"
   },
   "PlateNotFoundPopup": {
     "topText": "再试一次",
@@ -84,6 +176,13 @@
     "retryAria": "再次检查",
     "retry": "再次检查",
     "contactStaff": "联系工作人员"
+  },
+  "PlateCandidatePopup": {
+    "topText": "找到多个记录",
+    "title": "请选择您的车牌",
+    "subtitle": "请选择与您的车辆相符的车牌",
+    "entryAt": "入场时间: {value}",
+    "cancel": "取消"
   },
   "PreloadPopup": {
     "processing": "处理中",
@@ -95,6 +194,7 @@
     "printReceipt": "打印收据",
     "takeReceipt": "请取走收据",
     "thankYou": "感谢您的使用",
+    "autoClose": "{seconds} 秒后返回首页",
     "finish": "完成"
   },
   "PreloadPage": {

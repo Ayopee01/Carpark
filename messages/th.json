@@ -8,7 +8,10 @@
     "paymentService": "การชำระค่าบริการ",
     "baht": "บาท",
     "seconds": "วินาที",
-    "pleaseWait": "กรุณารอสักครู่"
+    "pleaseWait": "กรุณารอสักครู่",
+    "enter": "Enter",
+    "loading": "กำลังโหลด...",
+    "promptPay": "PromptPay"
   },
   "SideMenu": {
     "help": "ช่วยเหลือ",
@@ -39,7 +42,17 @@
   "Scan": {
     "subtitle": "สแกนเพื่อค้นหาเลขทะเบียน",
     "hintLine1": "กรุณาจัดวางเลขทะเบียนรถ หรือคิวอาร์โค้ดให้อยู่",
-    "hintLine2": "ภายในกรอบเพื่อทำการสแกน"
+    "hintLine2": "ภายในกรอบเพื่อทำการสแกน",
+    "viewfinderAlt": "กรอบสำหรับสแกน",
+    "resultLabel": "เลขทะเบียนที่รับจากเครื่องสแกน",
+    "waitingInput": "รอรับข้อมูล...",
+    "searching": "กำลังค้นหาข้อมูลทะเบียน...",
+    "errorInvalidData": "ข้อมูลที่ได้รับจาก API ไม่ถูกต้อง",
+    "errorNotFound": "ไม่พบข้อมูลทะเบียนนี้ในระบบ",
+    "errorSearchFailed": "ค้นหาข้อมูลทะเบียนไม่สำเร็จ",
+    "errorAlreadyProcessed": "รายการนี้ถูกดำเนินการแล้ว",
+    "errorUnexpected": "เกิดข้อผิดพลาด กรุณาลองใหม่"
+    ,"errorPlateTooShort": "เลขทะเบียนต้องมีอย่างน้อย {min} ตัวอักษร"
   },
   "Search": {
     "subtitle": "กรอกข้อมูลเลขทะเบียนรถของคุณ",
@@ -48,7 +61,10 @@
     "errorRequired": "กรุณากรอกเลขทะเบียนรถ",
     "errorInvalidData": "รูปแบบข้อมูลไม่ถูกต้อง",
     "errorSearchFailed": "ค้นหาข้อมูลไม่สำเร็จ",
+    "errorAlreadyProcessed": "รายการนี้ถูกดำเนินการแล้ว",
     "errorUnexpected": "เกิดข้อผิดพลาดบางอย่าง",
+    "errorDeviceRequired": "ไม่พบรหัสอุปกรณ์ กรุณาเปิดใช้งานตู้ก่อน",
+    "errorPlateTooShort": "เลขทะเบียนต้องมีอย่างน้อย {min} ตัวอักษร",
     "confirm": "ยืนยัน",
     "loadingButton": "กำลังโหลด...",
     "processing": "กำลังประมวลผล",
@@ -70,13 +86,89 @@
     "paymentProblem": "มีปัญหาในการชำระเงิน?",
     "errorNoPlate": "ไม่พบเลขทะเบียน",
     "errorPlateNotFound": "ไม่พบข้อมูลทะเบียนนี้",
-    "errorLoadFailed": "โหลดข้อมูลไม่สำเร็จ"
+    "errorLoadFailed": "โหลดข้อมูลไม่สำเร็จ",
+    "loading": "กำลังโหลดข้อมูล...",
+    "minute": "{count} นาที",
+    "hourMinute": "{hours} ชั่วโมง {minutes} นาที",
+    "durationYear": "{count} ปี",
+    "durationMonth": "{count} เดือน",
+    "durationDay": "{count} วัน",
+    "durationHour": "{count} ชั่วโมง",
+    "durationMinute": "{count} นาที",
+    "statusPending": "ยังไม่จ่าย",
+    "statusPartiallyPaid": "จ่ายบางส่วน",
+    "statusPaidWaitingExit": "จ่ายครบ รอรถออก",
+    "statusCompleted": "รายการเสร็จสมบูรณ์",
+    "statusCancelled": "ยกเลิก",
+    "fastSecure": "รวดเร็วและปลอดภัย"
   },
   "PaymentPopup": {
     "title": "ชำระค่าบริการ",
     "caption": "สแกนเพื่อชำระค่าบริการ",
     "payWithin": "กรุณาชำระเงินภายใน",
-    "cancel": "ยกเลิก"
+    "cancel": "ยกเลิก",
+    "successTitle": "ชำระเงินสำเร็จ",
+    "successPlate": "ทะเบียน {plateNo}",
+    "exitWithin": "เวลาออกภายใน {exitTimeLimit}",
+    "returningHome": "กำลังกลับสู่หน้าหลัก...",
+    "confirmPayment": "ยืนยันการชำระเงิน",
+    "confirming": "กำลังยืนยัน...",
+    "paymentFailed": "ไม่สามารถชำระเงินได้ กรุณาลองใหม่",
+    "qrAlt": "คิวอาร์โค้ดสำหรับชำระเงิน"
+  },
+  "Activate": {
+    "title": "Smart Carpark",
+    "subtitle": "กรอก Activation Code สำหรับเปิดใช้งานอุปกรณ์",
+    "codeLabel": "Activation Code",
+    "hint": "กรอกตัวเลข Activation Code ที่ได้รับจากระบบ Admin",
+    "footer": "หาก Code หมดอายุ กรุณาสร้าง Activation Code ใหม่จากหน้า Admin",
+    "delete": "ลบ",
+    "errorRequired": "กรุณากรอก Activation Code",
+    "errorLength": "กรุณากรอก Activation Code ให้ครบ {length} หลัก",
+    "errorActivateFailed": "เปิดใช้งานอุปกรณ์ไม่สำเร็จ",
+    "errorThemeInvalid": "ข้อมูล theme จาก API ไม่ถูกต้อง",
+    "errorConfigFailed": "โหลดข้อมูล Config ของอุปกรณ์ไม่สำเร็จ",
+    "errorUnexpected": "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    "successFallback": "เปิดใช้งานสำเร็จ",
+    "redirectingDashboard": "{message} กำลังเข้าสู่หน้า Dashboard...",
+    "redirectingBarrier": "{message} กำลังเข้าสู่หน้า Barrier Gate..."
+  },
+  "BarrierGate": {
+    "title": "Barrier Gate",
+    "subtitle": "รอรับ plateNo หรือ transactionId จากกล้อง",
+    "inputLabel": "plateNo / transactionId",
+    "waiting": "รอรับข้อมูล...",
+    "checking": "กำลังตรวจสอบรายการ...",
+    "lastDetected": "ตรวจพบล่าสุด: {value}",
+    "inputHint": "ส่งข้อมูลจาก LPR, กล้อง หรืออุปกรณ์ภายนอก",
+    "connectionConnecting": "กำลังเชื่อมต่อกล้อง",
+    "connectionConnected": "เชื่อมต่อกล้องแล้ว",
+    "connectionDisconnected": "การเชื่อมต่อกล้องขาด กำลังเชื่อมต่อใหม่",
+    "gateInfo": "{gateId} / ขา {direction}",
+    "gateInfoAll": "รับข้อมูลทั้ง GATE-A / IN และ GATE-A / OUT",
+    "lprDetectedAt": "ตรวจพบเมื่อ {value}",
+    "transactionId": "รหัสรายการ",
+    "eventStatus": "สถานะ",
+    "eventAction": "การดำเนินการ",
+    "actionOpenGate": "อนุญาตให้ผ่าน กำลังเปิดไม้กั้น",
+    "actionExitOpenGate": "ขอบคุณที่ใช้บริการ กำลังเปิดไม้กั้น",
+    "actionPaymentRequired": "ต้องชำระเงินหรือชำระใหม่",
+    "actionIgnoreDuplicate": "ตรวจพบ event ซ้ำ ไม่ทำรายการซ้ำ",
+    "actionActiveTransaction": "ทะเบียนนี้มีรายการจอดที่ยังเปิดอยู่",
+    "actionTransactionNotFound": "ไม่พบรายการจอดสำหรับขาออก",
+    "remaining": "ยอดคงเหลือ",
+    "reset": "รีเซ็ตข้อมูล",
+    "errorForbidden": "รายการนี้ไม่สามารถดำเนินการได้",
+    "errorNotFound": "ไม่พบรายการจอดรถ",
+    "errorCheckFailed": "ตรวจสอบรายการไม่สำเร็จ",
+    "denyUnpaid": "ยังมียอดค้างชำระ กรุณาชำระเงินที่ Kiosk",
+    "denyProcessed": "รายการนี้ถูกดำเนินการแล้วหรือถูกยกเลิก",
+    "opened": "เปิดไม้กั้นสำเร็จ",
+    "offline": "อุปกรณ์ไม่สามารถเชื่อมต่อระบบได้"
+  },
+  "Maintenance": {
+    "title": "อุปกรณ์อยู่ระหว่างปิดปรับปรุง",
+    "description": "กรุณาติดต่อผู้ดูแลระบบ"
   },
   "PlateNotFoundPopup": {
     "topText": "ลองอีกครั้ง",
@@ -84,6 +176,13 @@
     "retryAria": "ตรวจสอบอีกครั้ง",
     "retry": "ตรวจสอบอีกครั้ง",
     "contactStaff": "ติดต่อเจ้าหน้าที่"
+  },
+  "PlateCandidatePopup": {
+    "topText": "พบหลายรายการ",
+    "title": "เลือกทะเบียนรถของคุณ",
+    "subtitle": "กรุณาเลือกทะเบียนที่ตรงกับรถของคุณ",
+    "entryAt": "เวลาเข้า: {value}",
+    "cancel": "ยกเลิก"
   },
   "PreloadPopup": {
     "processing": "กำลังประมวลผล",
@@ -95,6 +194,7 @@
     "printReceipt": "พิมพ์ใบเสร็จ",
     "takeReceipt": "กรุณารับใบเสร็จ",
     "thankYou": "ขอบคุณที่ใช้บริการ",
+    "autoClose": "กำลังกลับสู่หน้าหลักใน {seconds} วินาที",
     "finish": "เสร็จสิ้น"
   },
   "PreloadPage": {

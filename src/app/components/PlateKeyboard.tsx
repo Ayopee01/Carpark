@@ -3,7 +3,7 @@
 // Import Libraries
 import { FiDelete } from "react-icons/fi";
 // Types
-import type { KeyboardItem, PlateSearchResponse } from "@/src/app/type/search";
+import type { KeyboardItem } from "@/src/app/type/search";
 
 // ------------------------------- Types -------------------------------
 type PlateKeyboardProps = {
@@ -15,12 +15,8 @@ type PlateKeyboardProps = {
     onConfirm: () => void;
 };
 
-export type FetchPlateResult = {
-    status: number;
-    result: PlateSearchResponse | null;
-};
-
 // ------------------------------- Keyboard Layout -------------------------------
+
 export const plateKeyboardRows: KeyboardItem[][] = [
     [
         { type: "key", value: "1" },
@@ -83,84 +79,9 @@ export const plateKeyboardRows: KeyboardItem[][] = [
     ],
 ];
 
-// ------------------------------- Fetch Helpers -------------------------------
-function safeParsePlateResponse(text: string): PlateSearchResponse | null {
-    try {
-        return text ? (JSON.parse(text) as PlateSearchResponse) : null;
-    } catch {
-        return null;
-    }
-}
-
-async function readResponseTextWithProgress(
-    response: Response,
-    onProgress: (value: number) => void
-): Promise<string | null> {
-    if (!response.body) {
-        return null;
-    }
-
-    const total = Number(response.headers.get("content-length") ?? 0);
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let received = 0;
-    let text = "";
-
-    while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) break;
-        if (!value) continue;
-
-        received += value.byteLength;
-        text += decoder.decode(value, { stream: true });
-
-        if (total > 0) {
-            const percent = Math.round((received / total) * 100);
-            onProgress(Math.min(percent, 100));
-        }
-    }
-
-    text += decoder.decode();
-    return text;
-}
-
-// ------------------------------- Function -------------------------------
-export async function fetchPlateWithProgress(
-    url: string,
-    onProgress: (value: number) => void
-): Promise<FetchPlateResult> {
-    onProgress(0);
-
-    const response = await fetch(url, {
-        method: "GET",
-        cache: "no-store",
-    });
-
-    if (!response.body) {
-        const result = (await response.json().catch(() => null)) as PlateSearchResponse | null;
-
-        onProgress(100);
-
-        return {
-            status: response.status,
-            result,
-        };
-    }
-
-    const responseText = await readResponseTextWithProgress(response, onProgress);
-    const result = safeParsePlateResponse(responseText ?? "");
-
-    onProgress(100);
-
-    return {
-        status: response.status,
-        result,
-    };
-}
-
 // ------------------------------- Component -------------------------------
+
+// Function Component Keyboard
 function PlateKeyboard({
     rows,
     loading,
@@ -169,6 +90,7 @@ function PlateKeyboard({
     onDelete,
     onConfirm,
 }: PlateKeyboardProps) {
+    // Function สำหรับ Render ปุ่มตามประเภทของ KeyboardItem
     const renderButton = (item: KeyboardItem, key: string) => {
         switch (item.type) {
             case "key":

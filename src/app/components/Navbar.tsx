@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 // Providers
 import { useKioskTheme } from "@/src/app/providers/KioskThemeRealtimeProvider";
-import { getActivatedDeviceType, getDeviceId, getDeviceToken } from "@/src/app/lib/device";
 // Components
 import SideMenu from "./SideMenu";
 import LangButton from "./LangButton";
@@ -16,39 +15,20 @@ import "../css/Navbar.css";
 import { HiMenuAlt2, HiMenu } from "react-icons/hi";
 import { CiCircleQuestion } from "react-icons/ci";
 
-function getLogoSrc(logoUrl: string, updatedAt?: string | null) {
-  const deviceType = getActivatedDeviceType();
-  const deviceId = deviceType ? getDeviceId(deviceType) : null;
-  const deviceToken = deviceType ? getDeviceToken(deviceType) : null;
-  const src = logoUrl.startsWith("/")
-    ? `/api/kiosk/logo?${new URLSearchParams({
-      src: logoUrl,
-      ...(deviceId ? { deviceId } : {}),
-      ...(deviceToken ? { deviceToken } : {}),
-      ...(deviceType ? { deviceType } : {}),
-    }).toString()}`
-    : logoUrl;
-
-  if (!updatedAt) return src;
-
-  try {
-    const url = new URL(src, window.location.origin);
-    url.searchParams.set("v", updatedAt);
-    return url.toString();
-  } catch {
-    const separator = src.includes("?") ? "&" : "?";
-    return `${src}${separator}v=${encodeURIComponent(updatedAt)}`;
-  }
-}
-
 // ------------------------------- Function -------------------------------
+
+// Function แสดง Navbar
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [failedLogoSrc, setFailedLogoSrc] = useState<string | null>(null);
   const t = useTranslations("Navbar");
+
+  // Fetch theme และ systemName จาก useKioskTheme
   const { theme, systemName, refreshTheme } = useKioskTheme();
   const logoSrc = theme?.logoUrl
-    ? getLogoSrc(theme.logoUrl, theme.updatedAt)
+    ? theme.updatedAt
+      ? `${theme.logoUrl}${theme.logoUrl.includes("?") ? "&" : "?"}v=${encodeURIComponent(theme.updatedAt)}`
+      : theme.logoUrl
     : null;
   const shouldShowLogo = Boolean(logoSrc && failedLogoSrc !== logoSrc);
 

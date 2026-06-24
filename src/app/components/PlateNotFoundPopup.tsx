@@ -15,6 +15,8 @@ type PlateNotFoundPopupProps = {
 };
 
 // ------------------------------- Function -------------------------------
+
+// Function แสดง Popup สำหรับกรณีไม่พบป้ายทะเบียน
 function PlateNotFoundPopup({
     open,
     onClose,

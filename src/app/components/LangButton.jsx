@@ -10,6 +10,8 @@ import "@/src/app/css/LangButton.css";
 import { FiChevronDown } from "react-icons/fi";
 
 // ------------------------------- Function -------------------------------
+
+// Function แสดงปุ่มเลือกภาษา รูปแบบ Dropdown
 function LangButton({ variant = "side" }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -19,7 +21,7 @@ function LangButton({ variant = "side" }) {
   const locale = useLocale();
   const t = useTranslations("SideMenu");
 
-  // ------------------------------- useEffect -------------------------------
+  // useEffect สำหรับปิด Dropdown เมื่อคลิกนอกพื้นที่หรือกดปุ่ม Escape
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!wrapRef.current?.contains(event.target)) {
@@ -27,6 +29,7 @@ function LangButton({ variant = "side" }) {
       }
     };
 
+    // Function ปิด Dropdown เมื่อกดปุ่ม Escape
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         setOpen(false);
@@ -42,32 +45,36 @@ function LangButton({ variant = "side" }) {
     };
   }, []);
 
+  // Function สำหรับจัดการการเลือก Language และ Refresh หน้า
   const handleSelectLanguage = (nextLocale) => {
     if (nextLocale === locale) {
       setOpen(false);
       return;
     }
 
-    document.cookie = `locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+    // Set cookie สำหรับเก็บ locale ที่เลือก และกำหนด path และ samesite
+    document.cookie = `locale=${nextLocale}; path=/; samesite=lax`;
     setOpen(false);
 
+    // Refresh หน้าเพื่อให้แสดงผลตาม locale ที่เลือก
     startTransition(() => {
       router.refresh();
     });
   };
 
-  const buttonClassName = variant === "nav" ? "langButton" : "langButton_side";
-  const wrapClassName =
-    variant === "nav"
-      ? "langDropdown langDropdown--nav"
-      : "langDropdown langDropdown--side";
-
   // ----------------------------------- UI -----------------------------------
   return (
-    <div className={wrapClassName} ref={wrapRef}>
+    <div
+      className={
+        variant === "nav"
+          ? "langDropdown langDropdown--nav"
+          : "langDropdown langDropdown--side"
+      }
+      ref={wrapRef}
+    >
       <button
         type="button"
-        className={buttonClassName}
+        className={variant === "nav" ? "langButton" : "langButton_side"}
         onClick={() => setOpen((prev) => !prev)}
         disabled={isPending}
       >

@@ -45,8 +45,39 @@
     color: color-mix(in srgb, var(--text-primary) 70%, transparent);
 }
 
+.barrier-gate-header .barrier-gate-header__gate {
+    font-size: 13px;
+}
+
+.barrier-gate-connection {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-primary) 8%, var(--background));
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.barrier-gate-connection span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #f79009;
+}
+
+.barrier-gate-connection--connected span {
+    background: #12b76a;
+}
+
+.barrier-gate-connection--disconnected span {
+    background: #f04438;
+}
+
 .barrier-gate-capture,
-.barrier-gate-payment {
+.barrier-gate-payment,
+.barrier-gate-event {
     width: 100%;
     border: 1px solid var(--theme);
     border-radius: 8px;
@@ -101,6 +132,18 @@
     color: #b42318;
 }
 
+.barrier-gate-alert--open {
+    border: 1px solid #12b76a;
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.barrier-gate-alert--denied {
+    border: 1px solid #f79009;
+    background: #fffaeb;
+    color: #b54708;
+}
+
 .barrier-gate-payment {
     padding: 24px;
     display: grid;
@@ -136,6 +179,38 @@
 .barrier-gate-payment__amount strong {
     font-size: 20px;
     color: var(--text-warning-error);
+}
+
+.barrier-gate-event {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.barrier-gate-event div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.barrier-gate-event span {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary) 58%, transparent);
+}
+
+.barrier-gate-event strong {
+    overflow-wrap: anywhere;
+    color: var(--text-secondary);
+}
+
+.barrier-gate-event p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: color-mix(in srgb, var(--text-primary) 72%, transparent);
 }
 
 .barrier-gate-payment__button,
@@ -196,5 +271,13 @@
 
     .barrier-gate-payment {
         grid-template-columns: 1fr;
+    }
+
+    .barrier-gate-event {
+        grid-template-columns: 1fr;
+    }
+
+    .barrier-gate-event p {
+        grid-column: auto;
     }
 }

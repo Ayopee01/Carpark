@@ -1,29 +1,18 @@
 "use client";
 
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    type ReactNode,
-} from "react";
-import {
-    applyKioskThemeToRoot,
-    getKioskThemeFromStorage,
-    normalizeKioskTheme,
-    saveKioskThemeToStorage,
-    type KioskConfigResponse,
-    type KioskThemeConfig,
-} from "@/src/app/lib/kioskTheme";
-import {
-    getDeviceId,
-    getDeviceToken,
-    getStoredDeviceCredential,
-} from "@/src/app/lib/device";
+// Import Libraries
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+type ReactNode } from "react";
+// Lib
+import { applyKioskThemeToRoot, getKioskThemeFromStorage, KIOSK_THEME_STORAGE_KEY, normalizeKioskTheme, saveKioskThemeToStorage } from "@/src/app/lib/kioskTheme";
+import { getDeviceId, getDeviceToken, getStoredDeviceCredential } from "@/src/app/lib/device";
+import { KIOSK_CONFIG_UPDATED_EVENT } from "@/src/app/lib/storageKeys";
+// Types
+import type { KioskConfigResponse, KioskThemeConfig } from "@/src/app/lib/kioskTheme";
 
+// ------------------------------- Types -------------------------------
+
+// ข้อมูล Theme และสถานะที่ Component ภายใน Provider สามารถเรียกใช้ได้
 type KioskThemeContextValue = {
     theme: KioskThemeConfig | null;
     systemName: string | null;
@@ -32,9 +21,14 @@ type KioskThemeContextValue = {
     refreshTheme: () => Promise<void>;
 };
 
-const KIOSK_META_STORAGE_KEY = "kioskConfigMeta";
-const KIOSK_CONFIG_UPDATED_EVENT = "kiosk-config-updated";
+// ------------------------------- Config -------------------------------
 
+// Key สำหรับเก็บข้อมูลประกอบ และชื่อ CustomEvent สำหรับอัปเดต Config ภายใน Browser
+const KIOSK_META_STORAGE_KEY = "kioskConfigMeta";
+
+// ------------------------------- Context -------------------------------
+
+// ค่าเริ่มต้นก่อนโหลด Theme จาก Storage หรือ API
 const KioskThemeContext = createContext<KioskThemeContextValue>({
     theme: null,
     systemName: null,
@@ -43,10 +37,14 @@ const KioskThemeContext = createContext<KioskThemeContextValue>({
     refreshTheme: async () => { },
 });
 
+// Hook สำหรับเรียกใช้ Theme และสถานะ Kiosk จาก Context
 export function useKioskTheme() {
     return useContext(KioskThemeContext);
 }
 
+// ------------------------------- Helpers -------------------------------
+
+// แปลง JSON จาก SSE และคืนค่า null เมื่อ payload ไม่ถูกต้อง
 function getEventPayload(event: MessageEvent) {
     try {
         return JSON.parse(event.data) as unknown;
@@ -55,8 +53,8 @@ function getEventPayload(event: MessageEvent) {
     }
 }
 
+// บันทึกชื่อระบบและสถานะอุปกรณ์ลง localStorage
 function saveKioskMetaToStorage(data: {
-    systemName: string | null;
     status: string | null;
 }) {
     if (typeof window === "undefined") return;
@@ -64,10 +62,10 @@ function saveKioskMetaToStorage(data: {
     localStorage.setItem(KIOSK_META_STORAGE_KEY, JSON.stringify(data));
 }
 
+// อ่านชื่อระบบและสถานะอุปกรณ์จาก localStorage
 function getKioskMetaFromStorage() {
     if (typeof window === "undefined") {
         return {
-            systemName: null,
             status: null,
         };
     }
@@ -77,66 +75,62 @@ function getKioskMetaFromStorage() {
 
         if (!raw) {
             return {
-                systemName: null,
                 status: null,
             };
         }
 
         const parsed = JSON.parse(raw) as {
-            systemName?: unknown;
             status?: unknown;
         };
 
         return {
-            systemName:
-                typeof parsed.systemName === "string" ? parsed.systemName : null,
             status: typeof parsed.status === "string" ? parsed.status : null,
         };
     } catch {
         return {
-            systemName: null,
             status: null,
         };
     }
 }
 
+// ------------------------------- Function -------------------------------
+
+// จัดการ Theme จาก Storage, API และ SSE แล้วส่งต่อผ่าน Context
 export function KioskThemeRealtimeProvider({
     children,
 }: {
     children: ReactNode;
 }) {
     const [theme, setTheme] = useState<KioskThemeConfig | null>(null);
-    const [systemName, setSystemName] = useState<string | null>(null);
     const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [sseVersion, setSseVersion] = useState(0);
 
+    // ป้องกันการแสดงข้อความ SSE error ซ้ำระหว่าง EventSource reconnect
     const hasLoggedSseErrorRef = useRef(false);
 
+    // ใช้ Theme กับ CSS variables บันทึกลง Storage และอัปเดต State
     const commitTheme = useCallback((nextTheme: KioskThemeConfig) => {
         applyKioskThemeToRoot(nextTheme);
         saveKioskThemeToStorage(nextTheme);
         setTheme(nextTheme);
     }, []);
 
+    // อัปเดตชื่อระบบและสถานะอุปกรณ์ทั้งใน State และ localStorage
     const commitMeta = useCallback(
-        (data: { systemName?: unknown; status?: unknown }) => {
-            const nextSystemName =
-                typeof data.systemName === "string" ? data.systemName : null;
-
+        (data: { status?: unknown }) => {
             const nextStatus = typeof data.status === "string" ? data.status : null;
 
-            setSystemName(nextSystemName);
             setStatus(nextStatus);
 
             saveKioskMetaToStorage({
-                systemName: nextSystemName,
                 status: nextStatus,
             });
         },
         []
     );
 
+    // ตรวจ Config แล้วอัปเดต Theme และข้อมูลประกอบพร้อมกัน
     const commitConfig = useCallback(
         (config: KioskConfigResponse) => {
             const nextTheme = normalizeKioskTheme(config.theme);
@@ -147,13 +141,13 @@ export function KioskThemeRealtimeProvider({
 
             commitTheme(nextTheme);
             commitMeta({
-                systemName: config.theme.systemName,
                 status: getStoredDeviceCredential()?.status,
             });
         },
         [commitTheme, commitMeta]
     );
 
+    // โหลด Config ล่าสุดจาก Next.js API
     const refreshTheme = useCallback(async () => {
         try {
             const response = await fetch("/api/devices/config", {
@@ -177,6 +171,9 @@ export function KioskThemeRealtimeProvider({
         }
     }, [commitConfig]);
 
+    // ------------------------------- useEffect -------------------------------
+
+    // ใช้ Theme ที่เก็บไว้เพื่อแสดงผลก่อน แล้วโหลด Config ล่าสุดจาก API
     useEffect(() => {
         const cachedTheme = getKioskThemeFromStorage();
         const cachedMeta = getKioskMetaFromStorage();
@@ -186,14 +183,14 @@ export function KioskThemeRealtimeProvider({
             setLoading(false);
         }
 
-        if (cachedMeta.systemName || cachedMeta.status) {
-            setSystemName(cachedMeta.systemName);
+        if (cachedMeta.status) {
             setStatus(cachedMeta.status);
         }
 
         refreshTheme();
     }, [commitTheme, refreshTheme]);
 
+    // รับ Config ที่หน้า Activate ส่งมาหลังเปิดใช้งานอุปกรณ์สำเร็จ
     useEffect(() => {
         const handleKioskConfigUpdated = (event: Event) => {
             const customEvent = event as CustomEvent<KioskConfigResponse>;
@@ -220,9 +217,10 @@ export function KioskThemeRealtimeProvider({
         };
     }, [commitConfig]);
 
+    // ซิงก์ Theme เมื่อ localStorage ถูกเปลี่ยนจาก Browser tab อื่น
     useEffect(() => {
         const handleStorageChange = (event: StorageEvent) => {
-            if (event.key !== "kioskThemeConfig" && event.key !== KIOSK_META_STORAGE_KEY) {
+            if (event.key !== KIOSK_THEME_STORAGE_KEY && event.key !== KIOSK_META_STORAGE_KEY) {
                 return;
             }
 
@@ -233,7 +231,6 @@ export function KioskThemeRealtimeProvider({
                 commitTheme(cachedTheme);
             }
 
-            setSystemName(cachedMeta.systemName);
             setStatus(cachedMeta.status);
             setLoading(false);
         };
@@ -245,6 +242,7 @@ export function KioskThemeRealtimeProvider({
         };
     }, [commitTheme]);
 
+    // เชื่อมต่อ SSE เพื่อรับ ping, theme_updated และ Theme payload แบบ Realtime
     useEffect(() => {
         let eventSource: EventSource | null = null;
 
@@ -256,10 +254,11 @@ export function KioskThemeRealtimeProvider({
                     deviceId,
                     ...(deviceToken ? { deviceToken } : {}),
                 }).toString()}`
-                : "/api/kiosk/events";
+                : "/api/client/events";
 
             eventSource = new EventSource(eventUrl);
 
+            // แปลงและจัดการ payload ตามประเภทข้อมูลที่ Backend ส่งมา
             const handleThemePayload = (event: MessageEvent) => {
                 const payload = getEventPayload(event);
 
@@ -267,29 +266,33 @@ export function KioskThemeRealtimeProvider({
                     return false;
                 }
 
-                const data = payload as {
+                    const data = payload as {
                     type?: string;
                     theme?: unknown;
                     systemName?: unknown;
                     status?: unknown;
                 };
 
+                // ping ใช้ยืนยันว่า SSE connection ยังส่งข้อมูลได้
                 if (data.type === "ping") {
                     return true;
                 }
 
+                // โหลด Config ใหม่เพื่อรับ logoUrl และ updatedAt หลัง Backend บันทึกสำเร็จ
+                if (data.type === "theme_updated") {
+                    void refreshTheme();
+                    return true;
+                }
+
+                // รองรับกรณี SSE ส่ง Theme object มากับ payload โดยตรง
                 if (data.theme) {
                     const nextTheme = normalizeKioskTheme(data.theme);
 
                     if (nextTheme) {
                         commitTheme(nextTheme);
 
-                        if (
-                            typeof data.systemName === "string" ||
-                            typeof data.status === "string"
-                        ) {
+                        if (typeof data.status === "string") {
                             commitMeta({
-                                systemName: data.systemName,
                                 status: data.status,
                             });
                         }
@@ -299,25 +302,22 @@ export function KioskThemeRealtimeProvider({
                     }
                 }
 
-                if (data.type === "theme_updated") {
-                    refreshTheme();
-                    return true;
-                }
-
                 return false;
             };
 
+            // Handler สำหรับ named event: theme_updated
             const handleThemeUpdated = (event: Event) => {
                 const wasHandled = handleThemePayload(event as MessageEvent);
 
                 if (!wasHandled) {
-                    refreshTheme();
+                    void refreshTheme();
                 }
             };
 
             eventSource.addEventListener("theme_updated", handleThemeUpdated);
             eventSource.onmessage = handleThemePayload;
 
+            // Reset สถานะการแจ้ง error เมื่อเชื่อมต่อ SSE สำเร็จ
             eventSource.onopen = () => {
                 hasLoggedSseErrorRef.current = false;
                 console.info("SSE theme connected");
@@ -333,6 +333,7 @@ export function KioskThemeRealtimeProvider({
                 }
             };
 
+            // ยกเลิก Event listener และปิด Connection เมื่อ Effect ถูก cleanup
             return () => {
                 eventSource?.removeEventListener(
                     "theme_updated",
@@ -349,6 +350,7 @@ export function KioskThemeRealtimeProvider({
         };
     }, [commitTheme, commitMeta, refreshTheme, sseVersion]);
 
+    // โหลด Config สำรองทุก 60 วินาทีเมื่อ SSE event ไม่มาถึง
     useEffect(() => {
         const pollingTimer = window.setInterval(() => {
             void refreshTheme();
@@ -357,17 +359,19 @@ export function KioskThemeRealtimeProvider({
         return () => window.clearInterval(pollingTimer);
     }, [refreshTheme]);
 
+    // จดจำ Context value และสร้างใหม่เมื่อข้อมูลที่เกี่ยวข้องเปลี่ยน
     const value = useMemo(
         () => ({
             theme,
-            systemName,
+            systemName: theme?.systemName ?? null,
             status,
             loading,
             refreshTheme,
         }),
-        [theme, systemName, status, loading, refreshTheme]
+        [theme, status, loading, refreshTheme]
     );
 
+    // ----------------------------------- UI -----------------------------------
     return (
         <KioskThemeContext.Provider value={value}>
             {children}

@@ -12,10 +12,14 @@ import "../css/SideMenu.css";
 import { CiCircleQuestion } from "react-icons/ci";
 
 // ------------------------------- Function -------------------------------
+
+// Function แสดง Side Menu สำหรับ Mobile View
 function SideMenu({ open, onClose }) {
     const t = useTranslations("SideMenu");
 
     // ------------------------------- useEffect -------------------------------
+
+    // ปิด Side Menu เมื่อกดปุ่ม Escape
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === "Escape") onClose();
@@ -25,6 +29,7 @@ function SideMenu({ open, onClose }) {
         return () => window.removeEventListener("keydown", handleKey);
     }, [onClose]);
 
+    // ปิด Scroll เมื่อเปิด Side Menu
     useEffect(() => {
         if (open) {
             document.body.style.overflow = "hidden";

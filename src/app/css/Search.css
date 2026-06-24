@@ -109,6 +109,10 @@
     color: var(--text-warning-error);
 }
 
+.search-page__error--processed {
+    color: var(--icon-check);
+}
+
 .plate-keyboard-container {
     justify-items: center;
 }

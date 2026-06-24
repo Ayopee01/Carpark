@@ -1,22 +1,28 @@
 "use client";
 
+// Import Libraries
 import { useEffect } from "react";
+// Lib
 import { startHeartbeat } from "@/src/app/lib/heartbeat";
-import type { UiDeviceType } from "@/src/app/lib/device";
 
-const HEARTBEAT_INTERVAL_MS = 45000;
+// ------------------------------- Function -------------------------------
 
+// เริ่มและหยุด Heartbeat ตามอายุการทำงานของ Application
 export default function HeartbeatProvider({
-    type,
     children,
 }: {
-    type: UiDeviceType;
     children: React.ReactNode;
 }) {
-    useEffect(() => {
-        const timer = startHeartbeat(type, HEARTBEAT_INTERVAL_MS);
-        return () => clearInterval(timer);
-    }, [type]);
+    // ------------------------------- useEffect -------------------------------
 
+    // ส่ง Check-in ทันทีและส่งซ้ำตามช่วงเวลาที่กำหนดใน heartbeat.ts
+    useEffect(() => {
+        const timer = startHeartbeat();
+
+        // หยุด Interval เมื่อ Provider ถูกถอดออกจากหน้า
+        return () => clearInterval(timer);
+    }, []);
+
+    // ----------------------------------- UI -----------------------------------
     return <>{children}</>;
 }

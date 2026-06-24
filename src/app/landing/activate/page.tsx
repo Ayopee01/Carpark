@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
     LuCheck,
     LuDelete,
@@ -18,12 +19,12 @@ import {
 } from "@/src/app/lib/kioskTheme";
 import { sendHeartbeat } from "@/src/app/lib/heartbeat";
 import { saveDeviceCredential } from "@/src/app/lib/device";
+import { KIOSK_CONFIG_UPDATED_EVENT } from "@/src/app/lib/storageKeys";
 import type { DeviceActivateResponse } from "@/src/app/type/client";
 // CSS
 import "@/src/app/css/KioskActivate.css";
 
 const MAX_CODE_LENGTH = 6;
-const KIOSK_CONFIG_UPDATED_EVENT = "kiosk-config-updated";
 
 const numericKeyboardKeys = [
     "1",
@@ -44,7 +45,7 @@ function saveKioskConfigToLocalStorage(config: KioskConfigResponse) {
     const nextTheme = normalizeKioskTheme(config.theme);
 
     if (!nextTheme) {
-        throw new Error("ข้อมูล themeColor จาก API ไม่ถูกต้อง");
+        throw new Error("invalid_theme");
     }
 
     saveKioskThemeToStorage(nextTheme);
@@ -57,26 +58,16 @@ function saveKioskConfigToLocalStorage(config: KioskConfigResponse) {
     );
 }
 
-function getErrorMessage(value: unknown, fallback: string) {
-    if (
-        value &&
-        typeof value === "object" &&
-        "message" in value &&
-        typeof value.message === "string"
-    ) {
-        return value.message;
-    }
-
-    return fallback;
-}
-
 function KioskActivatePage() {
     const router = useRouter();
+    const t = useTranslations("Activate");
+    const common = useTranslations("Common");
 
     const [code, setCode] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [successTarget, setSuccessTarget] = useState<"dashboard" | "barrier">("dashboard");
 
     const isLocked = submitting || Boolean(successMessage);
 
@@ -116,12 +107,12 @@ function KioskActivatePage() {
         const activationCode = code.trim();
 
         if (!activationCode) {
-            setError("กรุณากรอก Activation Code");
+            setError(t("errorRequired"));
             return;
         }
 
         if (activationCode.length !== MAX_CODE_LENGTH) {
-            setError(`กรุณากรอก Activation Code ให้ครบ ${MAX_CODE_LENGTH} หลัก`);
+            setError(t("errorLength", { length: MAX_CODE_LENGTH }));
             return;
         }
 
@@ -129,6 +120,7 @@ function KioskActivatePage() {
             setSubmitting(true);
             setError("");
             setSuccessMessage("");
+            setSuccessTarget("dashboard");
 
             const response = await fetch("/api/client/activate", {
                 method: "POST",
@@ -146,9 +138,7 @@ function KioskActivatePage() {
                 | null;
 
             if (!response.ok || !result?.success) {
-                throw new Error(
-                    getErrorMessage(result, "เปิดใช้งานตู้ Kiosk ไม่สำเร็จ")
-                );
+                throw new Error(t("errorActivateFailed"));
             }
 
             saveDeviceCredential({
@@ -166,7 +156,8 @@ function KioskActivatePage() {
                     console.warn("barrier-gate heartbeat after activation failed:", err);
                 });
 
-                setSuccessMessage(result.message || "Activation successful");
+                setSuccessTarget("barrier");
+                setSuccessMessage(result.message || t("successFallback"));
 
                 setTimeout(() => {
                     router.replace("/landing/barrier-gate");
@@ -184,30 +175,37 @@ function KioskActivatePage() {
             )) as KioskConfigResponse | null;
 
             if (!configResponse.ok || !kioskConfig?.theme) {
-                throw new Error("โหลดข้อมูล Config ของตู้ Kiosk ไม่สำเร็จ");
+                throw new Error(t("errorConfigFailed"));
             }
 
-            saveKioskConfigToLocalStorage(kioskConfig);
+            try {
+                saveKioskConfigToLocalStorage(kioskConfig);
+            } catch {
+                throw new Error(t("errorThemeInvalid"));
+            }
 
             await sendHeartbeat("kiosk").catch((err) => {
                 console.warn("kiosk heartbeat after activation failed:", err);
             });
 
-            setSuccessMessage(result.message || "Activation successful");
+            setSuccessMessage(result.message || t("successFallback"));
 
             setTimeout(() => {
                 router.replace("/landing/dashboard");
             }, 800);
         } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "เกิดข้อผิดพลาด กรุณาลองใหม่"
-            );
+            const localizedErrors = new Set([
+                t("errorActivateFailed"),
+                t("errorConfigFailed"),
+                t("errorThemeInvalid"),
+            ]);
+            const message = err instanceof Error ? err.message : "";
+
+            setError(localizedErrors.has(message) ? message : t("errorUnexpected"));
         } finally {
             setSubmitting(false);
         }
-    }, [code, isLocked, router]);
+    }, [code, isLocked, router, t]);
 
     useEffect(() => {
         const handlePhysicalKeyboard = (event: KeyboardEvent) => {
@@ -247,14 +245,14 @@ function KioskActivatePage() {
                     </div>
 
                     <div className="kiosk-activate__header">
-                        <h1>Smart Carpark</h1>
-                        <p>กรอก Activation Code สำหรับเปิดใช้งานตู้ Kiosk</p>
+                        <h1>{t("title")}</h1>
+                        <p>{t("subtitle")}</p>
                     </div>
 
                     <div className="kiosk-activate__form-area">
                         <div className="kiosk-code-card">
                             <label className="kiosk-code-card__label">
-                                Activation Code
+                                {t("codeLabel")}
                             </label>
 
                             <div className="kiosk-code-card__input-box">
@@ -262,7 +260,7 @@ function KioskActivatePage() {
                                     value={code}
                                     placeholder="000000"
                                     readOnly
-                                    aria-label="Activation Code"
+                                    aria-label={t("codeLabel")}
                                     className={`kiosk-code-card__input ${code ? "is-filled" : ""
                                         }`}
                                 />
@@ -277,14 +275,21 @@ function KioskActivatePage() {
                             }
                         >
                             {error ||
-                                "กรอกตัวเลข Activation Code ที่ได้รับจากระบบ Admin"}
+                                t("hint")}
                         </p>
 
                         {successMessage ? (
                             <div className="kiosk-alert kiosk-alert--success">
                                 <LuCheck size={18} />
                                 <span>
-                                    {successMessage} กำลังเข้าสู่หน้า Dashboard...
+                                    {t(
+                                        successTarget === "barrier"
+                                            ? "redirectingBarrier"
+                                            : "redirectingDashboard",
+                                        {
+                                        message: successMessage,
+                                        }
+                                    )}
                                 </span>
                             </div>
                         ) : null}
@@ -307,7 +312,7 @@ function KioskActivatePage() {
                                         className="kiosk-keyboard__key kiosk-keyboard__key--delete"
                                         onClick={handleDelete}
                                         disabled={isLocked}
-                                        aria-label="ลบ"
+                                        aria-label={t("delete")}
                                     >
                                         <LuDelete size={24} />
                                     </button>
@@ -329,7 +334,7 @@ function KioskActivatePage() {
                                                 size={22}
                                             />
                                         ) : (
-                                            "Enter"
+                                            common("enter")
                                         )}
                                     </button>
                                 );
@@ -352,7 +357,7 @@ function KioskActivatePage() {
                     </div>
 
                     <p className="kiosk-activate__footer">
-                        หาก Code หมดอายุ กรุณาสร้าง Activation Code ใหม่จากหน้า Admin
+                        {t("footer")}
                     </p>
                 </section>
             </div>

@@ -1,29 +1,60 @@
 "use client";
 
 // Import Libraries
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 // CSS
 import "@/src/app/css/ReceiptSuccessPopup.css";
 // Icons
 import { FiCheck, FiPrinter } from "react-icons/fi";
 
+// ------------------------------- Config -------------------------------
+
+// Config timing การปิด Popup auto (วินาที)
+const AUTO_CLOSE_SECONDS = 5;
+
 // ------------------------------- Types -------------------------------
 type ReceiptSuccessPopupProps = {
   open: boolean;
   onClose: () => void;
-  onPrint?: () => void;
 };
 
 // ------------------------------- Function -------------------------------
+
+// Function ตรวจสอบสถานะการเปิด Popup
 function ReceiptSuccessPopup({
-  open,
-  onClose,
-  onPrint,
+    open,
+    onClose,
 }: ReceiptSuccessPopupProps) {
+  if (!open) return null;
+
+  return <ReceiptSuccessPopupContent onClose={onClose} />;
+}
+
+// Function นับถอยหลังจากการเปิด Popup เมื่อแสดงผลแล้ว
+function ReceiptSuccessPopupContent({
+  onClose,
+}: Omit<ReceiptSuccessPopupProps, "open">) {
   const t = useTranslations("ReceiptSuccessPopup");
   const common = useTranslations("Common");
+  const [timeLeft, setTimeLeft] = useState(AUTO_CLOSE_SECONDS);
 
-  if (!open) return null;
+  // ------------------------------- useEffect -------------------------------
+
+  useEffect(() => {
+    const closeTimer = window.setTimeout(
+      onClose,
+      AUTO_CLOSE_SECONDS * 1000
+    );
+    const countdownTimer = window.setInterval(() => {
+      setTimeLeft((value) => Math.max(value - 1, 0));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(closeTimer);
+      window.clearInterval(countdownTimer);
+    };
+  }, [onClose]);
 
   // ----------------------------------- UI -----------------------------------
   return (
@@ -52,16 +83,15 @@ function ReceiptSuccessPopup({
             <FiCheck />
           </div>
 
-          <button
-            type="button"
-            className="receipt-popup__print-btn"
-            onClick={onPrint}
-          >
+          <div className="receipt-popup__print-btn" aria-live="polite">
             <FiPrinter />
             {t("takeReceipt")}
-          </button>
+          </div>
 
           <p className="receipt-popup__thankyou">{t("thankYou")}</p>
+          <p className="receipt-popup__countdown">
+            {t("autoClose", { seconds: timeLeft })}
+          </p>
           <span className="receipt-popup__line" />
         </div>
 

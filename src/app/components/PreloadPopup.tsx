@@ -14,6 +14,8 @@ type PreloadPopupProps = {
 };
 
 // ------------------------------- Function -------------------------------
+
+// Function แสดง Popup สำหรับ Preload
 function PreloadPopup({
   statusText,
   title,

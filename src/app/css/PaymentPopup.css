@@ -130,6 +130,15 @@
   background: var(--background);
 }
 
+.payment-popup__price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 .payment-popup__amount {
   font-size: 32px;
   font-weight: 700;
@@ -227,6 +236,10 @@
     padding: 14px;
   }
 
+  .payment-popup__price {
+    gap: 7px;
+  }
+
   .payment-popup__amount {
     font-size: 28px;
     line-height: 32px;
@@ -292,6 +305,10 @@
     padding: 12px;
   }
 
+  .payment-popup__price {
+    gap: 6px;
+  }
+
   .payment-popup__amount {
     font-size: 26px;
     line-height: 30px;
@@ -351,6 +368,10 @@
   .payment-popup__qr-icon {
     width: min(170px, 56vw);
     padding: 10px;
+  }
+
+  .payment-popup__price {
+    gap: 5px;
   }
 
   .payment-popup__amount {

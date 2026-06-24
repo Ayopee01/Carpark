@@ -90,9 +90,31 @@ export type ClientTransactionResponse = {
     device: DeviceInfo | null;
 };
 
+export type ClientTransactionCandidate = {
+    plateNo: string;
+    billNo: string;
+    vehicleType: "car" | "motorcycle" | string;
+    status: string;
+    entryAt: ISODateString | null;
+    exitAt: ISODateString | null;
+    exitTimeLimit: ISODateString | null;
+};
+
+export type ClientTransactionMultipleResponse = {
+    matchType: "multiple";
+    requiresSelection: true;
+    query: string;
+    candidates: ClientTransactionCandidate[];
+    clientType?: DeviceType | "mobile" | "public";
+    device?: DeviceInfo | null;
+};
+
+export type ClientTransactionSearchResponse =
+    | ClientTransactionResponse
+    | ClientTransactionMultipleResponse;
+
 export type ClientPaymentRequest = {
-    transactionId?: string;
-    plateNo?: string;
+    plateNo: string;
     method?: "qr" | "cash" | "wallet" | string;
     amount?: number;
     deviceId?: string;
@@ -103,6 +125,32 @@ export type ClientPaymentResponse = {
     transaction: ClientTransactionResponse;
     clientType: DeviceType | "mobile";
     device: DeviceInfo | null;
+};
+
+export type LprAction =
+    | "OPEN_GATE"
+    | "PAYMENT_REQUIRED"
+    | "IGNORE_DUPLICATE"
+    | "IGNORE_ACTIVE_TRANSACTION"
+    | "TRANSACTION_NOT_FOUND";
+
+export type LprDirection = "IN" | "OUT";
+
+export type LprDetectedEvent = {
+    type: "lpr_detected";
+    success: boolean;
+    action: LprAction;
+    message: string;
+    transactionId: string;
+    plateNo: string;
+    vehicleType: string;
+    cameraId: string;
+    gateId: string;
+    direction: LprDirection;
+    status: string;
+    exitTimeLimit: ISODateString | null;
+    capturedAt: ISODateString;
+    emittedAt: ISODateString;
 };
 
 export type ClientSseEvent =
@@ -118,4 +166,5 @@ export type ClientSseEvent =
     | {
         type: "ping";
         at: ISODateString;
-    };
+    }
+    | LprDetectedEvent;

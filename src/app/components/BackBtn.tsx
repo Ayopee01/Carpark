@@ -9,13 +9,17 @@ import "../css/BackBtn.css";
 import { FiChevronLeft } from "react-icons/fi";
 
 // ------------------------------- Function -------------------------------
+
+// Function แสดงปุ่ม Back Button
 function BackBtn() {
   const router = useRouter();
   const t = useTranslations("Common");
 
+  // Function ย้อนกลับใน window.history ถ้ามากกว่า 1
   const handleBack = () => {
     if (window.history.length > 1) {
       router.back();
+      // หากไม่มีให้กลับไป page แรก
     } else {
       router.push("/");
     }

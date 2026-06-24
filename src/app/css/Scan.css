@@ -70,6 +70,14 @@
   gap: 16px;
 } */
 
+.scan-page__error {
+  color: var(--text-warning-error);
+}
+
+.scan-page__error--processed {
+  color: var(--icon-check);
+}
+
 /* responsive */
 @media (max-width: 1024px) {
   .scan-page__content {

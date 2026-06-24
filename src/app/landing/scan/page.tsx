@@ -4,45 +4,24 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-    getPlateNoValidationMessage,
-    isValidPlateNo,
-    normalizePlateNo,
-} from "@/src/app/lib/plate";
+import { normalizePlateNo } from "@/src/app/lib/plate";
 import {
     getDeviceAuthHeaders,
     getDeviceId,
     handleDeviceResponseStatus,
 } from "@/src/app/lib/device";
+import { isAlreadyProcessedTransactionError } from "@/src/app/lib/transactionStatus";
+import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
 import type { ClientTransactionResponse } from "@/src/app/type/client";
 
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
+import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 
 // CSS
 import "@/src/app/css/Scan.css";
 
-const SEARCH_API_PATH = "/api/kiosk/search";
-const PRELOAD_DELAY_MS = null;
-
-const STORAGE_KEYS = {
-    searchedPlate: "searchedPlate",
-    plateDetailData: "plateDetailData",
-    plateSearchResponse: "plateSearchResponse",
-} as const;
-
-function getErrorMessage(value: unknown, fallback: string) {
-    if (
-        value &&
-        typeof value === "object" &&
-        "message" in value &&
-        typeof value.message === "string"
-    ) {
-        return value.message;
-    }
-
-    return fallback;
-}
+const SEARCH_API_PATH = "/api/client/transaction";
 
 async function fetchKioskSearch(plateNo: string) {
     const deviceId = getDeviceId("kiosk")?.trim() ?? "";
@@ -59,26 +38,19 @@ async function fetchKioskSearch(plateNo: string) {
 
     const result = (await response.json().catch(() => null)) as
         | ClientTransactionResponse
+        | { message?: string; status?: string }
         | null;
 
-    handleDeviceResponseStatus(response, result as { message?: string; status?: string } | null);
+    const wasRedirected = handleDeviceResponseStatus(
+        response,
+        result as { message?: string; status?: string } | null
+    );
 
     return {
         status: response.status,
         result,
+        wasRedirected,
     };
-}
-
-function saveSearchResult(plateNo: string, response: ClientTransactionResponse) {
-    sessionStorage.setItem(STORAGE_KEYS.searchedPlate, plateNo);
-    sessionStorage.setItem(
-        STORAGE_KEYS.plateDetailData,
-        JSON.stringify(response)
-    );
-    sessionStorage.setItem(
-        STORAGE_KEYS.plateSearchResponse,
-        JSON.stringify(response)
-    );
 }
 
 function safeDecodeURIComponent(value: string) {
@@ -127,23 +99,16 @@ function ScanPage() {
     const [scannedPlate, setScannedPlate] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isAlreadyProcessedError, setIsAlreadyProcessedError] = useState(false);
+    const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
 
     const bufferRef = useRef("");
     const loadingRef = useRef(false);
-    const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const clearScanTimer = useCallback(() => {
-        if (scanTimerRef.current) {
-            clearTimeout(scanTimerRef.current);
-            scanTimerRef.current = null;
-        }
-    }, []);
 
     const resetScanBuffer = useCallback(() => {
         bufferRef.current = "";
         setScannedPlate("");
-        clearScanTimer();
-    }, [clearScanTimer]);
+    }, []);
 
     const handleSearch = useCallback(
         async (scanValue: string) => {
@@ -151,69 +116,58 @@ function ScanPage() {
 
             if (!trimmedPlate || loadingRef.current) return;
 
-            if (!isValidPlateNo(trimmedPlate)) {
-                setScannedPlate(trimmedPlate);
-                setError(getPlateNoValidationMessage());
-                resetScanBuffer();
-                return;
-            }
-
             try {
                 loadingRef.current = true;
                 setLoading(true);
                 setError("");
+                setIsAlreadyProcessedError(false);
                 setScannedPlate(trimmedPlate);
 
-                const { status, result } = await fetchKioskSearch(trimmedPlate);
+                const { status, result, wasRedirected } = await fetchKioskSearch(trimmedPlate);
 
-                if (!result) {
-                    throw new Error("ข้อมูลที่ได้รับจาก API ไม่ถูกต้อง");
-                }
+                if (wasRedirected) return;
 
                 if (status === 404) {
-                    throw new Error("ไม่พบข้อมูลทะเบียนนี้ในระบบ");
+                    setShowNotFoundPopup(true);
+                    resetScanBuffer();
+                    return;
                 }
 
                 if (status >= 400) {
-                    throw new Error(
-                        getErrorMessage(result, "ค้นหาข้อมูลทะเบียนไม่สำเร็จ")
+                    const isAlreadyProcessed = isAlreadyProcessedTransactionError(status, result);
+
+                    setIsAlreadyProcessedError(isAlreadyProcessed);
+                    setError(
+                        isAlreadyProcessed
+                            ? t("errorAlreadyProcessed")
+                            : t("errorSearchFailed")
                     );
+                    resetScanBuffer();
+                    return;
                 }
 
-                saveSearchResult(trimmedPlate, result);
+                if (!result) {
+                    setError(t("errorInvalidData"));
+                    resetScanBuffer();
+                    return;
+                }
+
+                savePlateTransactionResult(trimmedPlate, result as ClientTransactionResponse);
 
                 router.push(
                     `/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`
                 );
             } catch (err) {
-                setError(
-                    err instanceof Error
-                        ? err.message
-                        : "เกิดข้อผิดพลาด กรุณาลองใหม่"
-                );
+                console.error("Unexpected scan search error:", err);
+                setError(t("errorUnexpected"));
                 resetScanBuffer();
             } finally {
                 loadingRef.current = false;
                 setLoading(false);
             }
         },
-        [resetScanBuffer, router]
+        [resetScanBuffer, router, t]
     );
-
-    const scheduleAutoSubmit = useCallback(() => {
-        if (PRELOAD_DELAY_MS === null) return;
-
-        clearScanTimer();
-
-        scanTimerRef.current = setTimeout(() => {
-            const value = bufferRef.current.trim();
-
-            if (!value || loadingRef.current) return;
-
-            bufferRef.current = "";
-            void handleSearch(value);
-        }, PRELOAD_DELAY_MS);
-    }, [clearScanTimer, handleSearch]);
 
     useEffect(() => {
         const handleBarcodeInput = (event: KeyboardEvent) => {
@@ -228,7 +182,6 @@ function ScanPage() {
                 if (!value) return;
 
                 bufferRef.current = "";
-                clearScanTimer();
                 void handleSearch(value);
                 return;
             }
@@ -238,7 +191,6 @@ function ScanPage() {
 
                 bufferRef.current = bufferRef.current.slice(0, -1);
                 setScannedPlate(bufferRef.current);
-                scheduleAutoSubmit();
                 return;
             }
 
@@ -248,7 +200,7 @@ function ScanPage() {
                 bufferRef.current += event.key;
                 setScannedPlate(bufferRef.current);
                 setError("");
-                scheduleAutoSubmit();
+                setIsAlreadyProcessedError(false);
             }
         };
 
@@ -262,7 +214,6 @@ function ScanPage() {
             event.preventDefault();
 
             bufferRef.current = "";
-            clearScanTimer();
 
             const plate = extractPlateFromScanValue(pastedValue);
             setScannedPlate(plate || pastedValue.trim());
@@ -276,62 +227,71 @@ function ScanPage() {
         return () => {
             window.removeEventListener("keydown", handleBarcodeInput);
             window.removeEventListener("paste", handlePaste);
-            clearScanTimer();
         };
-    }, [clearScanTimer, handleSearch, scheduleAutoSubmit]);
+    }, [handleSearch]);
 
     return (
-        <section className="scan-page">
-            <div className="scan-page__content">
-                <div>
-                    <BackBtn />
-                </div>
+        <>
+            <section className="scan-page">
+                <div className="scan-page__content">
+                    <div>
+                        <BackBtn />
+                    </div>
 
-                <div className="scan-page__header">
-                    <h1>Smart Carpark</h1>
-                    <p>{t("subtitle")}</p>
-                </div>
+                    <div className="scan-page__header">
+                        <h1>Smart Carpark</h1>
+                        <p>{t("subtitle")}</p>
+                    </div>
 
-                <div className="scan-page__icon">
-                    <div className="scan-page__divider" />
+                    <div className="scan-page__icon">
+                        <div className="scan-page__divider" />
 
-                    <Image
-                        src="/icon/Scanner_Viewfinder.png"
-                        alt="scanner viewfinder"
-                        className="scan-page__viewfinder"
-                        width={384}
-                        height={338}
-                    />
-                </div>
+                        <Image
+                            src="/icon/Scanner_Viewfinder.png"
+                            alt={t("viewfinderAlt")}
+                            className="scan-page__viewfinder"
+                            width={384}
+                            height={338}
+                        />
+                    </div>
 
-                <div className="scan-page__hint">
-                    <p>{t("hintLine1")}</p>
-                    <p>{t("hintLine2")}</p>
-                </div>
+                    <div className="scan-page__hint">
+                        <p>{t("hintLine1")}</p>
+                        <p>{t("hintLine2")}</p>
+                    </div>
 
-                <div className="scan-page__result">
-                    <p className="scan-page__result-label">
-                        เลขทะเบียนที่รับจากเครื่องสแกน
-                    </p>
-
-                    <strong className="scan-page__result-value">
-                        {scannedPlate || "รอรับข้อมูล..."}
-                    </strong>
-
-                    {loading ? (
-                        <p className="scan-page__status">
-                            กำลังค้นหาข้อมูลทะเบียน...
+                    <div className="scan-page__result">
+                        <p className="scan-page__result-label">
+                            {t("resultLabel")}
                         </p>
-                    ) : null}
 
-                    {error ? (
-                        <p className="scan-page__error">
-                            {error}
-                        </p>
-                    ) : null}
+                        <strong className="scan-page__result-value">
+                            {scannedPlate || t("waitingInput")}
+                        </strong>
+
+                        {loading ? (
+                            <p className="scan-page__status">
+                                {t("searching")}
+                            </p>
+                        ) : null}
+
+                        {error ? (
+                            <p
+                                className={`scan-page__error ${isAlreadyProcessedError ? "scan-page__error--processed" : ""}`}
+                            >
+                                {error}
+                            </p>
+                        ) : null}
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <PlateNotFoundPopup
+                open={showNotFoundPopup}
+                onClose={() => setShowNotFoundPopup(false)}
+                onRetry={() => setShowNotFoundPopup(false)}
+            />
+        </>
     );
 }
 
