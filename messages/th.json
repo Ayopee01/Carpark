@@ -111,9 +111,10 @@
     "successPlate": "ทะเบียน {plateNo}",
     "exitWithin": "เวลาออกภายใน {exitTimeLimit}",
     "returningHome": "กำลังกลับสู่หน้าหลัก...",
-    "confirmPayment": "ยืนยันการชำระเงิน",
-    "confirming": "กำลังยืนยัน...",
+    "creatingQr": "กำลังสร้าง QR Code สำหรับชำระเงิน...",
+    "waitingVerification": "รอตรวจสอบการชำระเงิน",
     "paymentFailed": "ไม่สามารถชำระเงินได้ กรุณาลองใหม่",
+    "qrUnavailable": "ไม่พบ QR Code สำหรับชำระเงิน",
     "qrAlt": "คิวอาร์โค้ดสำหรับชำระเงิน"
   },
   "Activate": {
@@ -190,6 +191,7 @@
     "pleaseWait": "กรุณารอสักครู่"
   },
   "ReceiptSuccessPopup": {
+    "exitWithin": "กรุณาออกจากที่จอดรถภายใน {exitTimeLimit}",
     "title": "ชำระค่าบริการสำเร็จ",
     "printReceipt": "พิมพ์ใบเสร็จ",
     "takeReceipt": "กรุณารับใบเสร็จ",

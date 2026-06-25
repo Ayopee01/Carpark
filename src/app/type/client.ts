@@ -120,6 +120,67 @@ export type ClientPaymentRequest = {
     deviceId?: string;
 };
 
+export type OmisePaymentQr = {
+    object?: string | null;
+    type?: string | null;
+    image?: string | {
+        object?: string | null;
+        location?: string | null;
+    } | null;
+    imageUrl?: string | null;
+    image_url?: string | null;
+    scannableCode?: {
+        image?: {
+            downloadUri?: string | null;
+            download_uri?: string | null;
+            uri?: string | null;
+        } | null;
+    } | null;
+    scannable_code?: {
+        image?: {
+            download_uri?: string | null;
+            downloadUri?: string | null;
+            uri?: string | null;
+        } | null;
+    } | null;
+};
+
+export type OmiseChargeResponse = {
+    message: string;
+    clientType: DeviceType | "mobile";
+    device: DeviceInfo | null;
+    charge: {
+        provider: "omise";
+        chargeId: string;
+        status: string;
+        amount: number;
+        currency: "thb" | string;
+        plateNo: string;
+        method: "promptpay" | string;
+        channel: "kiosk" | string;
+        qr?: OmisePaymentQr | null;
+        source?: {
+            scannableCode?: OmisePaymentQr["scannableCode"];
+            scannable_code?: OmisePaymentQr["scannable_code"];
+        } | null;
+        scannableCode?: OmisePaymentQr["scannableCode"];
+        scannable_code?: OmisePaymentQr["scannable_code"];
+        authorizeUri?: string | null;
+        authorize_uri?: string | null;
+    };
+};
+
+export type OmisePaymentUpdatedEvent = {
+    type: "payment_updated";
+    provider: "omise";
+    chargeId: string;
+    plateNo: string;
+    paymentStatus: "successful" | "failed" | "expired" | string;
+    transactionStatus: string;
+    remainingAmount: number;
+    exitTimeLimit: ISODateString | null;
+};
+
 export type ClientPaymentResponse = {
     message: string;
     transaction: ClientTransactionResponse;

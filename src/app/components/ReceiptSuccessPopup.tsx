@@ -2,7 +2,7 @@
 
 // Import Libraries
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 // CSS
 import "@/src/app/css/ReceiptSuccessPopup.css";
 // Icons
@@ -17,6 +17,7 @@ const AUTO_CLOSE_SECONDS = 5;
 type ReceiptSuccessPopupProps = {
   open: boolean;
   onClose: () => void;
+  exitTimeLimit?: string | null;
 };
 
 // ------------------------------- Function -------------------------------
@@ -25,19 +26,28 @@ type ReceiptSuccessPopupProps = {
 function ReceiptSuccessPopup({
     open,
     onClose,
+    exitTimeLimit,
 }: ReceiptSuccessPopupProps) {
   if (!open) return null;
 
-  return <ReceiptSuccessPopupContent onClose={onClose} />;
+  return (
+    <ReceiptSuccessPopupContent
+      onClose={onClose}
+      exitTimeLimit={exitTimeLimit}
+    />
+  );
 }
 
 // Function นับถอยหลังจากการเปิด Popup เมื่อแสดงผลแล้ว
 function ReceiptSuccessPopupContent({
   onClose,
+  exitTimeLimit,
 }: Omit<ReceiptSuccessPopupProps, "open">) {
   const t = useTranslations("ReceiptSuccessPopup");
   const common = useTranslations("Common");
+  const locale = useLocale();
   const [timeLeft, setTimeLeft] = useState(AUTO_CLOSE_SECONDS);
+  const formattedExitTime = formatExitTime(exitTimeLimit ?? null, locale);
 
   // ------------------------------- useEffect -------------------------------
 
@@ -89,6 +99,11 @@ function ReceiptSuccessPopupContent({
           </div>
 
           <p className="receipt-popup__thankyou">{t("thankYou")}</p>
+          {formattedExitTime ? (
+            <p className="receipt-popup__exit-time">
+              {t("exitWithin", { exitTimeLimit: formattedExitTime })}
+            </p>
+          ) : null}
           <p className="receipt-popup__countdown">
             {t("autoClose", { seconds: timeLeft })}
           </p>
@@ -105,6 +120,26 @@ function ReceiptSuccessPopupContent({
       </div>
     </div>
   );
+}
+
+function formatExitTime(value: string | null, locale: string) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat(
+    locale === "zh" ? "zh-CN" : locale === "en" ? "en-US" : "th-TH",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Bangkok",
+    }
+  ).format(date);
 }
 
 export default ReceiptSuccessPopup;

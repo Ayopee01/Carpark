@@ -13,9 +13,14 @@ import { BARRIER_RETURN_STORAGE_KEY } from "@/src/app/lib/storageKeys";
 const BARRIER_PATH = "/landing/barrier-gate";
 const BARRIER_PAYMENT_PATH = "/landing/detail";
 const KIOSK_HOME_PATH = "/landing/dashboard";
+const MOBILE_HOME_PATH = "/landing/search";
 const SHARED_PATHS = new Set([
     "/landing/activate",
     "/landing/maintenance",
+]);
+const MOBILE_PATHS = new Set([
+    "/landing/search",
+    "/landing/detail",
 ]);
 
 // ------------------------------- Helpers -------------------------------
@@ -28,6 +33,10 @@ function isBarrierPath(pathname: string) {
 // ตรวจสอบว่า pathname อยู่ภายใต้ /landing หรือไม่
 function isLandingPath(pathname: string) {
     return pathname === "/landing" || pathname.startsWith("/landing/");
+}
+
+function isMobilePath(pathname: string) {
+    return MOBILE_PATHS.has(pathname);
 }
 
 // ------------------------------- Function -------------------------------
@@ -55,7 +64,14 @@ export default function DeviceRouteGuard({
             Boolean(sessionStorage.getItem(BARRIER_RETURN_STORAGE_KEY));
 
         // Mobile/Public, Route นอก /landing และ Route ส่วนกลางไม่ต้องจำกัดสิทธิ์
-        if (!deviceType || !isLandingPath(pathname) || SHARED_PATHS.has(pathname)) {
+        if (!isLandingPath(pathname) || SHARED_PATHS.has(pathname)) {
+            return;
+        }
+
+        if (!deviceType) {
+            if (!isMobilePath(pathname)) {
+                router.replace(MOBILE_HOME_PATH);
+            }
             return;
         }
 

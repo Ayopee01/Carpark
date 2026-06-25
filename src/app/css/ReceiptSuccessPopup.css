@@ -158,6 +158,14 @@
   text-align: center;
 }
 
+.receipt-popup__exit-time {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--icon-check);
+  text-align: center;
+}
+
 .receipt-popup__countdown {
   margin: 8px 0 0;
   font-size: 12px;

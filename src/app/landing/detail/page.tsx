@@ -305,6 +305,7 @@ function DetailPage() {
     const [resolvedPlate, setResolvedPlate] = useState("");
     const [loading, setLoading] = useState(false);
     const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
+    const [paymentExitTimeLimit, setPaymentExitTimeLimit] = useState<string | null>(null);
 
     useEffect(() => {
         if (!plate) return;
@@ -317,18 +318,19 @@ function DetailPage() {
                 setFetchError("");
                 setShowNotFoundPopup(false);
 
-                const deviceType = getActivatedDeviceType() ?? "kiosk";
-                const deviceId = getDeviceId(deviceType)?.trim() ?? "";
-                const query = new URLSearchParams({
-                    plateNo: plate,
-                    deviceId,
-                });
+                const deviceType = getActivatedDeviceType();
+                const deviceId = deviceType ? getDeviceId(deviceType)?.trim() ?? "" : "";
+                const query = new URLSearchParams({ plateNo: plate });
+
+                if (deviceId) {
+                    query.set("deviceId", deviceId);
+                }
 
                 const response = await fetch(
                     `/api/client/transaction?${query.toString()}`,
                     {
                         method: "GET",
-                        headers: getDeviceAuthHeaders(deviceType),
+                        headers: deviceType ? getDeviceAuthHeaders(deviceType) : {},
                         cache: "no-store",
                     }
                 );
@@ -558,6 +560,7 @@ function DetailPage() {
                 transaction={currentData?.raw ?? null}
                 onSuccess={(payment: ClientPaymentResponse) => {
                     setIsPopupOpen(false);
+                    setPaymentExitTimeLimit(payment.transaction.exitTimeLimit);
 
                     try {
                         setData(mapKioskItemToDetailData(payment.transaction, locale, t));
@@ -573,6 +576,7 @@ function DetailPage() {
 
             <ReceiptSuccessPopup
                 open={isReceiptPopupOpen}
+                exitTimeLimit={paymentExitTimeLimit}
                 onClose={() => {
                     setIsReceiptPopupOpen(false);
                     const barrierReturnUrl = sessionStorage.getItem(
@@ -585,7 +589,9 @@ function DetailPage() {
                         return;
                     }
 
-                    router.replace("/landing/dashboard");
+                    const deviceType = getActivatedDeviceType();
+
+                    router.replace(deviceType === "kiosk" ? "/landing/dashboard" : "/landing/search");
                 }}
             />
 

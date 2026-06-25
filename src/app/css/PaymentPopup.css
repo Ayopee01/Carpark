@@ -130,6 +130,21 @@
   background: var(--background);
 }
 
+.payment-popup__qr-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(276px, 72vw);
+  max-width: 100%;
+  min-height: 180px;
+  padding: 16px;
+  color: var(--text-warning-error);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--background);
+}
+
 .payment-popup__price {
   display: flex;
   align-items: baseline;
@@ -212,6 +227,31 @@
   color: #a62a00;
   font-size: 15px;
   font-weight: 800;
+}
+
+.payment-popup__success,
+.payment-popup__error {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.payment-popup__success {
+  color: var(--icon-check);
+}
+
+.payment-popup__error {
+  color: var(--text-warning-error);
+}
+
+.payment-popup__link {
+  margin: 12px 0;
+  color: #3D5F78;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 /* ---------- tablet ---------- */

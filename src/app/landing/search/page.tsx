@@ -43,7 +43,7 @@ const SEARCH_API_PATH = "/api/client/transaction";
 
 async function fetchKioskSearchWithProgress(
   plateNo: string,
-  deviceId: string,
+  deviceId: string | null,
   onProgress: (value: number) => void
 ) {
   onProgress(15);
@@ -51,14 +51,15 @@ async function fetchKioskSearchWithProgress(
   try {
     onProgress(35);
 
-    const searchParams = new URLSearchParams({
-      plateNo,
-      deviceId,
-    });
+    const searchParams = new URLSearchParams({ plateNo });
+
+    if (deviceId) {
+      searchParams.set("deviceId", deviceId);
+    }
 
     const response = await fetch(`${SEARCH_API_PATH}?${searchParams.toString()}`, {
       method: "GET",
-      headers: getDeviceAuthHeaders("kiosk"),
+      headers: deviceId ? getDeviceAuthHeaders("kiosk") : {},
       cache: "no-store",
     });
 
@@ -161,12 +162,7 @@ function SearchPage() {
       return;
     }
 
-    const deviceId = getDeviceId("kiosk")?.trim();
-
-    if (!deviceId) {
-      setError(t("errorDeviceRequired"));
-      return;
-    }
+    const deviceId = getDeviceId("kiosk")?.trim() || null;
 
     setLoading(true);
     resetSearchState();

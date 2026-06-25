@@ -111,9 +111,10 @@
     "successPlate": "车牌 {plateNo}",
     "exitWithin": "请在 {exitTimeLimit} 前离场",
     "returningHome": "正在返回首页...",
-    "confirmPayment": "确认付款",
-    "confirming": "正在确认...",
+    "creatingQr": "正在创建支付二维码...",
+    "waitingVerification": "正在等待付款验证",
     "paymentFailed": "无法处理付款，请重试",
+    "qrUnavailable": "未收到支付二维码",
     "qrAlt": "付款二维码"
   },
   "Activate": {
@@ -190,6 +191,7 @@
     "pleaseWait": "请稍候"
   },
   "ReceiptSuccessPopup": {
+    "exitWithin": "请在 {exitTimeLimit} 前离场",
     "title": "支付成功",
     "printReceipt": "打印收据",
     "takeReceipt": "请取走收据",

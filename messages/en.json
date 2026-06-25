@@ -111,9 +111,10 @@
     "successPlate": "Plate {plateNo}",
     "exitWithin": "Exit by {exitTimeLimit}",
     "returningHome": "Returning to home...",
-    "confirmPayment": "Confirm payment",
-    "confirming": "Confirming...",
+    "creatingQr": "Creating payment QR code...",
+    "waitingVerification": "Waiting for payment verification",
     "paymentFailed": "Unable to process payment. Please try again",
+    "qrUnavailable": "Payment QR code is not available",
     "qrAlt": "Payment QR code"
   },
   "Activate": {
@@ -190,6 +191,7 @@
     "pleaseWait": "Please wait a moment"
   },
   "ReceiptSuccessPopup": {
+    "exitWithin": "Please exit by {exitTimeLimit}",
     "title": "Payment successful",
     "printReceipt": "Print receipt",
     "takeReceipt": "Please take your receipt",
