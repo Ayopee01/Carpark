@@ -1,9 +1,7 @@
-"use client"
+"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-// Components
-import Activate from "./landing/activate/page";
 import { getActivatedDeviceType } from "@/src/app/lib/device";
 
 // ----------------------------------- UI -----------------------------------
@@ -20,10 +18,13 @@ function Page() {
 
     if (deviceType === "barrier-gate") {
       router.replace("/landing/barrier-gate");
+      return;
     }
+
+    router.replace("/landing/search");
   }, [router]);
 
-  return <Activate />;
+  return null;
 }
 
-export default Page
+export default Page;

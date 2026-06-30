@@ -55,6 +55,9 @@ export async function sendHeartbeat(type?: UiDeviceType) {
         status: checkIn.status,
         deviceName: checkIn.device.deviceName,
         location: checkIn.device.deviceLocation,
+        gateId: checkIn.device.gateId ?? undefined,
+        cameraId: checkIn.device.cameraId ?? undefined,
+        direction: checkIn.device.direction ?? undefined,
     });
     return checkIn;
 }

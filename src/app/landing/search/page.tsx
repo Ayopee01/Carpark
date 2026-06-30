@@ -1,5 +1,6 @@
 "use client";
 
+// Import Libraries
 import {
   useState,
   type ChangeEvent,
@@ -8,6 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+// Components
 import BackBtn from "@/src/app/components/BackBtn";
 import PlateCandidatePopup from "@/src/app/components/PlateCandidatePopup";
 import PlateKeyboard, {
@@ -15,32 +17,46 @@ import PlateKeyboard, {
 } from "@/src/app/components/PlateKeyboard";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PreloadPopup from "@/src/app/components/PreloadPopup";
-import {
-  MIN_PLATE_NO_LENGTH,
-  isValidPlateNo,
-  normalizePlateNo,
-} from "@/src/app/lib/plate";
+
+// Libs
 import {
   getDeviceAuthHeaders,
   getDeviceId,
   handleDeviceResponseStatus,
 } from "@/src/app/lib/device";
 import {
+  MIN_PLATE_NO_LENGTH,
+  isValidPlateNo,
+  normalizePlateNo,
+} from "@/src/app/lib/plate";
+import {
   isAlreadyProcessedTransactionError,
   isMultipleTransactionResponse,
   isSelectableTransactionCandidate,
 } from "@/src/app/lib/transactionStatus";
 import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
+
+// Types
 import type {
   ClientTransactionCandidate,
   ClientTransactionResponse,
   ClientTransactionSearchResponse,
 } from "@/src/app/type/client";
 
+// CSS
 import "@/src/app/css/Search.css";
+
+// ------------------------------- Config -------------------------------
 
 const SEARCH_API_PATH = "/api/client/transaction";
 
+function hasNoPaymentRequired(transaction: ClientTransactionResponse) {
+  return (transaction.amount?.remainingAmount ?? 0) <= 0;
+}
+
+// ------------------------------- Function -------------------------------
+
+// Function สำหรับค้นหาทะเบียน พร้อมอัปเดต progress ของ loading popup
 async function fetchKioskSearchWithProgress(
   plateNo: string,
   deviceId: string | null,
@@ -97,6 +113,7 @@ function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAlreadyProcessedError, setIsAlreadyProcessedError] = useState(false);
+  const [isSuccessValidation, setIsSuccessValidation] = useState(false);
   const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
   const [candidatePlates, setCandidatePlates] = useState<ClientTransactionCandidate[]>([]);
   const [showCandidatePopup, setShowCandidatePopup] = useState(false);
@@ -104,6 +121,7 @@ function SearchPage() {
   const clearError = () => {
     setError("");
     setIsAlreadyProcessedError(false);
+    setIsSuccessValidation(false);
   };
 
   const resetSearchState = () => {
@@ -225,9 +243,17 @@ function SearchPage() {
         return;
       }
 
-      savePlateTransactionResult(trimmedPlate, result as ClientTransactionResponse);
+      const transaction = result as ClientTransactionResponse;
+
+      savePlateTransactionResult(trimmedPlate, transaction);
 
       completeLoading();
+
+      if (hasNoPaymentRequired(transaction)) {
+        setIsSuccessValidation(true);
+        setError(t("noPaymentRequired"));
+        return;
+      }
 
       router.push(`/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`);
     } catch (error) {
@@ -302,7 +328,7 @@ function SearchPage() {
             <p
               className={
                 error
-                  ? `search-page__error ${isAlreadyProcessedError ? "search-page__error--processed" : ""}`
+                  ? `search-page__error ${isAlreadyProcessedError || isSuccessValidation ? "search-page__error--processed" : ""}`
                   : "search-page__subtitle"
               }
             >

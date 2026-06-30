@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 // Import Libraries
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+
 // CSS
 import "@/src/app/css/Dashboard.css";
+
 // Icons
 import { TbScan } from "react-icons/tb";
 import { MdOutlineImageSearch } from "react-icons/md";

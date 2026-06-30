@@ -1,12 +1,15 @@
 "use client";
 
-import Link from "next/link";
 // Import Libraries
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
+
 // CSS
 import "@/src/app/css/Help.css";
+
 // Icons
 import { FiPhoneCall } from "react-icons/fi";
 

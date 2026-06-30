@@ -8,6 +8,9 @@ export type DeviceInfo = {
     deviceName: string;
     deviceLocation: string | null;
     status: string;
+    gateId?: string | null;
+    cameraId?: string | null;
+    direction?: "IN" | "OUT" | null;
 };
 
 export type StoredDeviceCredential = {
@@ -18,6 +21,9 @@ export type StoredDeviceCredential = {
     location: string | null;
     status: string;
     activatedAt?: ISODateString;
+    gateId?: string | null;
+    cameraId?: string | null;
+    direction?: "IN" | "OUT" | null;
 };
 
 export type ApiErrorResponse = {
@@ -39,6 +45,9 @@ export type DeviceActivateResponse = {
     deviceName: string;
     location: string | null;
     status: string;
+    gateId?: string | null;
+    cameraId?: string | null;
+    direction?: "IN" | "OUT" | null;
 };
 
 export type DeviceCheckInRequest = {
@@ -112,13 +121,6 @@ export type ClientTransactionMultipleResponse = {
 export type ClientTransactionSearchResponse =
     | ClientTransactionResponse
     | ClientTransactionMultipleResponse;
-
-export type ClientPaymentRequest = {
-    plateNo: string;
-    method?: "qr" | "cash" | "wallet" | string;
-    amount?: number;
-    deviceId?: string;
-};
 
 export type OmisePaymentQr = {
     object?: string | null;
@@ -197,6 +199,13 @@ export type LprAction =
 
 export type LprDirection = "IN" | "OUT";
 
+export type LprPaymentReason =
+    | "pending"
+    | "partially_paid"
+    | "remaining_amount"
+    | "exit_window_expired"
+    | string;
+
 export type LprDetectedEvent = {
     type: "lpr_detected";
     success: boolean;
@@ -209,8 +218,14 @@ export type LprDetectedEvent = {
     gateId: string;
     direction: LprDirection;
     status: string;
+    paymentRequired?: boolean;
+    reason?: LprPaymentReason | null;
+    remainingAmount?: number | null;
+    netAmount?: number | null;
+    totalPaid?: number | null;
     exitTimeLimit: ISODateString | null;
     capturedAt: ISODateString;
+    checkedAt?: ISODateString | null;
     emittedAt: ISODateString;
 };
 

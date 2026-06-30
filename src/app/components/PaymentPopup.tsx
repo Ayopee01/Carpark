@@ -8,7 +8,17 @@ import {
   getDeviceAuthHeaders,
   getStoredDeviceCredential,
   handleDeviceResponseStatus,
+  type UiDeviceType,
 } from "@/src/app/lib/device";
+import { formatExitTime } from "@/src/app/lib/date";
+import {
+  buildPaymentWebSocketUrl,
+  buildSuccessfulPayment,
+  buildSuccessfulPaymentFromTransaction,
+  isTransactionPaid,
+  normalizePaymentUpdatedEvent,
+  type OmisePaymentUpdatePayload,
+} from "@/src/app/lib/payment/paymentStatus";
 
 // Components
 import PlateCandidatePopup from "@/src/app/components/PlateCandidatePopup";
@@ -48,6 +58,8 @@ type PaymentPopupProps = {
   onClose: () => void;
   transaction: ClientTransactionResponse | null;
   onSuccess?: (payment: ClientPaymentResponse) => void;
+  paymentDeviceId?: string | null;
+  paymentDeviceType?: UiDeviceType;
 };
 
 type OmiseConfigResponse = {
@@ -58,8 +70,19 @@ type OmiseConfigResponse = {
 type PaymentStep = "idle" | "creating" | "waiting" | "successful" | "failed";
 
 const PAYMENT_TIMEOUT_SECONDS = 60;
+const PAYMENT_STATUS_POLL_MS = 3000;
+const MIN_PROMPTPAY_AMOUNT_BAHT = 10;
 const OMISE_SCRIPT_SRC = "https://cdn.omise.co/omise.js";
 const paymentChargePromises = new Map<string, Promise<OmiseChargeResponse["charge"]>>();
+
+function logPaymentDebug(
+  level: "info" | "warn" | "error",
+  message: string,
+  data?: unknown
+) {
+  if (process.env.NODE_ENV === "production") return;
+  console[level](message, data);
+}
 
 function loadOmiseScript() {
   return new Promise<void>((resolve, reject) => {
@@ -153,73 +176,32 @@ function getBackendErrorMessage(
   return fallbackMessage;
 }
 
-function formatExitTime(value: string | null, locale: string) {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat(
-    locale === "zh" ? "zh-CN" : locale === "en" ? "en-US" : "th-TH",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "Asia/Bangkok",
-    }
-  ).format(date);
-}
-
 function toSatang(amount: number) {
   return Math.round(amount * 100);
 }
 
-function buildPaymentWebSocketUrl(baseUrl: string, chargeId: string) {
-  const url = new URL(baseUrl);
-  url.searchParams.set("chargeId", chargeId);
-  return url.toString();
-}
+function getPaymentClientType(
+  paymentDeviceType?: UiDeviceType
+): DeviceType | "mobile" {
+  if (paymentDeviceType === "kiosk") return "kiosk";
+  if (paymentDeviceType === "barrier-gate") return "barrier_gate";
 
-function getPaymentClientType(): DeviceType | "mobile" {
   const credential = getStoredDeviceCredential();
-  return credential?.deviceType === "kiosk" ? "kiosk" : "mobile";
-}
-
-function buildSuccessfulPayment(
-  transaction: ClientTransactionResponse,
-  event: OmisePaymentUpdatedEvent,
-  clientType: DeviceType | "mobile"
-): ClientPaymentResponse {
-  const paidAmount = transaction.amount.netAmount - event.remainingAmount;
-
-  return {
-    message: "Payment successful",
-    clientType,
-    device: transaction.device,
-    transaction: {
-      ...transaction,
-      status: event.transactionStatus || "paid_waiting_exit",
-      exitTimeLimit: event.exitTimeLimit,
-      amount: {
-        ...transaction.amount,
-        paidAmount,
-        remainingAmount: event.remainingAmount,
-      },
-    },
-  };
+  if (credential?.deviceType === "kiosk") return "kiosk";
+  if (credential?.deviceType === "barrier_gate") return "barrier_gate";
+  return "mobile";
 }
 
 async function createPaymentCharge({
   amountSatang,
   deviceId,
+  deviceType,
   plateNo,
   publicKey,
 }: {
   amountSatang: number;
   deviceId: string | null;
+  deviceType?: UiDeviceType;
   plateNo: string;
   publicKey: string;
 }) {
@@ -236,7 +218,7 @@ async function createPaymentCharge({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(deviceId ? getDeviceAuthHeaders("kiosk") : {}),
+      ...(deviceId ? getDeviceAuthHeaders(deviceType) : {}),
     },
     body: JSON.stringify({
       plateNo,
@@ -294,18 +276,21 @@ async function createPaymentCharge({
 function getPaymentChargeSessionKey({
   amountSatang,
   deviceId,
+  deviceType,
   plateNo,
 }: {
   amountSatang: number;
   deviceId: string | null;
+  deviceType?: UiDeviceType;
   plateNo: string;
 }) {
-  return `${deviceId ?? "mobile"}:${plateNo}:${amountSatang}`;
+  return `${deviceType ?? "mobile"}:${deviceId ?? "mobile"}:${plateNo}:${amountSatang}`;
 }
 
 function getOrCreatePaymentCharge(options: {
   amountSatang: number;
   deviceId: string | null;
+  deviceType?: UiDeviceType;
   plateNo: string;
   publicKey: string;
 }) {
@@ -333,6 +318,8 @@ function PaymentPopupContent({
   onClose,
   transaction,
   onSuccess,
+  paymentDeviceId,
+  paymentDeviceType,
 }: Omit<PaymentPopupProps, "open">) {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT_SECONDS);
   const [step, setStep] = useState<PaymentStep>("idle");
@@ -399,7 +386,13 @@ function PaymentPopupContent({
         setStep("successful");
         setExitTimeLimit(event.exitTimeLimit);
 
-        onSuccess?.(buildSuccessfulPayment(transaction, event, getPaymentClientType()));
+        onSuccess?.(
+          buildSuccessfulPayment(
+            transaction,
+            event,
+            getPaymentClientType(paymentDeviceType)
+          )
+        );
         return;
       }
 
@@ -409,47 +402,147 @@ function PaymentPopupContent({
         setError(t("paymentFailed"));
       }
     },
-    [charge?.chargeId, closePaymentSocket, onSuccess, t, transaction]
+    [charge?.chargeId, closePaymentSocket, onSuccess, paymentDeviceType, t, transaction]
   );
 
   useEffect(() => {
-    if (!charge?.chargeId || step !== "waiting") return;
+    if (step !== "waiting" || !transaction) return;
 
     let cancelled = false;
+    let pollTimer: number | null = null;
+
+    const pollPaymentStatus = async () => {
+      try {
+        const credential = getStoredDeviceCredential();
+        const deviceId =
+          paymentDeviceId?.trim() ||
+          (credential?.deviceType === "kiosk" ||
+            credential?.deviceType === "barrier_gate"
+            ? credential.deviceId.trim()
+            : "");
+        const requestDeviceType =
+          paymentDeviceType ??
+          (credential?.deviceType === "barrier_gate" ? "barrier-gate" : "kiosk");
+        const query = new URLSearchParams({ plateNo: transaction.plateNo });
+
+        if (deviceId) {
+          query.set("deviceId", deviceId);
+        }
+
+        const response = await fetch(`/api/client/transaction?${query}`, {
+          method: "GET",
+          headers: deviceId ? getDeviceAuthHeaders(requestDeviceType) : {},
+          cache: "no-store",
+        });
+        const result = (await response.json().catch(() => null)) as
+          | ClientTransactionResponse
+          | null;
+
+        if (cancelled || !response.ok || !result || !isTransactionPaid(result)) {
+          return;
+        }
+
+        cancelled = true;
+        closePaymentSocket();
+        setStep("successful");
+        setExitTimeLimit(result.exitTimeLimit);
+        onSuccess?.(
+          buildSuccessfulPaymentFromTransaction(
+            result,
+            getPaymentClientType(requestDeviceType)
+          )
+        );
+      } catch (pollError) {
+        logPaymentDebug("warn", "Payment status polling failed:", pollError);
+      } finally {
+        if (!cancelled) {
+          pollTimer = window.setTimeout(pollPaymentStatus, PAYMENT_STATUS_POLL_MS);
+        }
+      }
+    };
+
+    pollTimer = window.setTimeout(pollPaymentStatus, PAYMENT_STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer !== null) {
+        window.clearTimeout(pollTimer);
+      }
+    };
+  }, [closePaymentSocket, onSuccess, paymentDeviceId, paymentDeviceType, step, transaction]);
+
+  useEffect(() => {
+    if (!charge?.chargeId || step !== "waiting" || !transaction) return;
+
+    let cancelled = false;
+    let paymentWebSocketUrl = "";
 
     const connectPaymentSocket = async () => {
       try {
-        const configResponse = await fetch("/api/client/payment/omise/config", {
-          method: "GET",
-          cache: "no-store",
-        });
-        const config = (await configResponse.json().catch(() => null)) as
-          | OmiseConfigResponse
-          | null;
+        if (!paymentWebSocketUrl) {
+          const configResponse = await fetch("/api/client/payment/omise/config", {
+            method: "GET",
+            cache: "no-store",
+          });
+          const config = (await configResponse.json().catch(() => null)) as
+            | OmiseConfigResponse
+            | null;
 
-        if (!configResponse.ok || !config?.paymentWebSocketUrl || cancelled) {
-          throw new Error("Payment WebSocket config is not available");
+          if (!configResponse.ok || !config?.paymentWebSocketUrl || cancelled) {
+            throw new Error("Payment WebSocket config is not available");
+          }
+
+          paymentWebSocketUrl = config.paymentWebSocketUrl;
         }
 
+        if (cancelled) return;
+
         const socket = new WebSocket(
-          buildPaymentWebSocketUrl(config.paymentWebSocketUrl, charge.chargeId)
+          buildPaymentWebSocketUrl(paymentWebSocketUrl, charge.chargeId)
         );
         webSocketRef.current = socket;
 
-        socket.onmessage = (message) => {
-          const data = JSON.parse(message.data) as OmisePaymentUpdatedEvent;
+        socket.onopen = () => {
+          logPaymentDebug("info", "Payment WebSocket connected", {
+            chargeId: charge.chargeId,
+          });
+        };
 
-          if (data?.type === "payment_updated") {
-            handlePaymentUpdated(data);
+        socket.onmessage = (message) => {
+          const data = JSON.parse(message.data) as OmisePaymentUpdatePayload;
+          const paymentEvent = normalizePaymentUpdatedEvent(
+            data,
+            charge.chargeId,
+            transaction
+          );
+
+          if (paymentEvent) {
+            cancelled = true;
+            handlePaymentUpdated(paymentEvent);
           }
         };
 
-        socket.onerror = () => {
-          setError(t("paymentFailed"));
+        socket.onerror = (event) => {
+          logPaymentDebug("warn", "Payment WebSocket error", {
+            chargeId: charge.chargeId,
+            event,
+          });
+        };
+
+        socket.onclose = (event) => {
+          if (webSocketRef.current === socket) {
+            webSocketRef.current = null;
+          }
+
+          logPaymentDebug("warn", "Payment WebSocket closed", {
+            chargeId: charge.chargeId,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
         };
       } catch (socketError) {
-        console.error("Payment WebSocket failed:", socketError);
-        setError(t("paymentFailed"));
+        logPaymentDebug("error", "Payment WebSocket failed:", socketError);
       }
     };
 
@@ -459,10 +552,25 @@ function PaymentPopupContent({
       cancelled = true;
       closePaymentSocket();
     };
-  }, [charge?.chargeId, closePaymentSocket, handlePaymentUpdated, step, t]);
+  }, [
+    charge?.chargeId,
+    closePaymentSocket,
+    handlePaymentUpdated,
+    step,
+    transaction,
+  ]);
 
   const startPaymentSession = useCallback(async () => {
     if (!transaction || !canCreatePayment || amountSatang <= 0) return;
+
+    if (amount <= MIN_PROMPTPAY_AMOUNT_BAHT) {
+      closePaymentSocket();
+      setStep("failed");
+      setCharge(null);
+      setExitTimeLimit(null);
+      setError(t("minimumAmountCashier"));
+      return;
+    }
 
     try {
       closePaymentSocket();
@@ -474,11 +582,14 @@ function PaymentPopupContent({
 
       const credential = getStoredDeviceCredential();
       const deviceId =
-        credential?.deviceType === "kiosk" &&
-          credential.deviceId &&
-          credential.deviceToken
+        paymentDeviceId?.trim() ||
+        (credential?.deviceType === "kiosk" ||
+          credential?.deviceType === "barrier_gate"
           ? credential.deviceId.trim()
-          : null;
+          : null);
+      const requestDeviceType =
+        paymentDeviceType ??
+        (credential?.deviceType === "barrier_gate" ? "barrier-gate" : "kiosk");
 
       const configResponse = await fetch("/api/client/payment/omise/config", {
         method: "GET",
@@ -495,6 +606,7 @@ function PaymentPopupContent({
       const nextCharge = await getOrCreatePaymentCharge({
         amountSatang,
         deviceId,
+        deviceType: requestDeviceType,
         plateNo: transaction.plateNo,
         publicKey: config.publicKey,
       });
@@ -502,7 +614,7 @@ function PaymentPopupContent({
       setCharge(nextCharge);
       setStep("waiting");
     } catch (paymentError) {
-      console.error("Payment failed:", paymentError);
+      logPaymentDebug("error", "Payment failed:", paymentError);
       closePaymentSocket();
       setStep("failed");
 
@@ -521,8 +633,11 @@ function PaymentPopupContent({
     }
   }, [
     amountSatang,
+    amount,
     canCreatePayment,
     closePaymentSocket,
+    paymentDeviceId,
+    paymentDeviceType,
     t,
     transaction,
   ]);
@@ -613,7 +728,14 @@ function PaymentPopupContent({
             type="button"
             className="payment-popup__close-btn"
             onClick={() => void startPaymentSession()}
-            disabled={isBusy || !canCreatePayment || timeLeft <= 0 || !transaction || amountSatang <= 0}
+            disabled={
+              isBusy ||
+              !canCreatePayment ||
+              timeLeft <= 0 ||
+              !transaction ||
+              amountSatang <= 0 ||
+              amount <= MIN_PROMPTPAY_AMOUNT_BAHT
+            }
           >
             <BsQrCodeScan />
             <span>{paymentButtonText}</span>
@@ -637,8 +759,16 @@ function PaymentPopupContent({
         onClose={() => setCandidates([])}
         onSelect={(plateNo) => {
           setCandidates([]);
+          const targetParams = new URLSearchParams({ plateNo });
+
+          if (paymentDeviceType === "barrier-gate" && paymentDeviceId) {
+            targetParams.set("deviceId", paymentDeviceId);
+          }
+
           window.location.replace(
-            `/landing/detail?plateNo=${encodeURIComponent(plateNo)}`
+            paymentDeviceType === "barrier-gate"
+              ? `/landing/check-payment?${targetParams.toString()}`
+              : `/landing/detail?${targetParams.toString()}`
           );
         }}
       />

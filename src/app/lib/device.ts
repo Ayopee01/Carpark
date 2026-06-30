@@ -20,6 +20,13 @@ export function normalizeDeviceType(value: unknown): DeviceType | null {
     return null;
 }
 
+export function normalizeBarrierDirection(value: unknown): "IN" | "OUT" | null {
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().toUpperCase();
+    if (normalized === "IN" || normalized === "OUT") return normalized;
+    return null;
+}
+
 // Function สำหรับแปลง DeviceType เป็น UiDeviceType
 export function toUiDeviceType(type: DeviceType): UiDeviceType {
     return type === "barrier_gate" ? "barrier-gate" : "kiosk";
@@ -59,6 +66,9 @@ export function getStoredDeviceCredential(): StoredDeviceCredential | null {
             location: value.location ?? null,
             status: value.status,
             activatedAt: value.activatedAt,
+            gateId: typeof value.gateId === "string" ? value.gateId : null,
+            cameraId: typeof value.cameraId === "string" ? value.cameraId : null,
+            direction: normalizeBarrierDirection(value.direction),
         };
     } catch {
         return null;

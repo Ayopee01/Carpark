@@ -1,7 +1,5 @@
-import type {
-    ClientTransactionCandidate,
-    ClientTransactionMultipleResponse,
-} from "@/src/app/type/client";
+// Types
+import type { ClientTransactionCandidate, ClientTransactionMultipleResponse } from "@/src/app/type/client";
 
 // Function สำหรับตรวจสอบกรณี Backend แจ้งว่ารายการถูกดำเนินการแล้ว
 export function isAlreadyProcessedTransactionError(

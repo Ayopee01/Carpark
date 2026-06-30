@@ -77,6 +77,7 @@
 
 .barrier-gate-capture,
 .barrier-gate-payment,
+.barrier-gate-flow,
 .barrier-gate-event {
     width: 100%;
     border: 1px solid var(--theme);
@@ -142,6 +143,73 @@
     border: 1px solid #f79009;
     background: #fffaeb;
     color: #b54708;
+}
+
+.barrier-gate-flow {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.barrier-gate-flow--entry {
+    border-color: #12b76a;
+    background: #ecfdf3;
+}
+
+.barrier-gate-flow--exit {
+    border-color: var(--theme);
+}
+
+.barrier-gate-flow--payment {
+    border-color: #f79009;
+    background: #fffaeb;
+}
+
+.barrier-gate-flow__header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.barrier-gate-flow__header span,
+.barrier-gate-flow__grid span,
+.barrier-gate-flow__amounts span {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-primary) 58%, transparent);
+}
+
+.barrier-gate-flow__header strong {
+    font-size: 28px;
+    line-height: 34px;
+    color: var(--text-secondary);
+}
+
+.barrier-gate-flow__grid,
+.barrier-gate-flow__amounts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.barrier-gate-flow__grid div,
+.barrier-gate-flow__amounts div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--background);
+}
+
+.barrier-gate-flow__grid strong,
+.barrier-gate-flow__amounts strong {
+    overflow-wrap: anywhere;
+    color: var(--text-secondary);
+    font-size: 18px;
 }
 
 .barrier-gate-payment {
@@ -270,6 +338,11 @@
     }
 
     .barrier-gate-payment {
+        grid-template-columns: 1fr;
+    }
+
+    .barrier-gate-flow__grid,
+    .barrier-gate-flow__amounts {
         grid-template-columns: 1fr;
     }
 

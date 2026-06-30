@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         request.nextUrl.searchParams.get("deviceToken")?.trim();
     const gateId = request.nextUrl.searchParams.get("gateId")?.trim();
     const direction = request.nextUrl.searchParams.get("direction")?.trim();
+    const cameraId = request.nextUrl.searchParams.get("cameraId")?.trim();
 
     // ตรวจสอบว่า deviceId และ deviceToken ถูกส่งมาหรือไม่
     let upstream: Response;
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
         if (deviceId) params.set("deviceId", deviceId);
         if (gateId) params.set("gateId", gateId);
         if (direction) params.set("direction", direction);
+        if (cameraId) params.set("cameraId", cameraId);
 
         // GET Request ไปยัง backend เพื่อเชื่อมต่อกับ event stream
         upstream = await fetch(`${baseUrl}/api/v1/client/events?${params}`, {

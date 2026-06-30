@@ -11,7 +11,7 @@ import { BARRIER_RETURN_STORAGE_KEY } from "@/src/app/lib/storageKeys";
 
 // Route หลักและ Storage key ที่ใช้ควบคุมสิทธิ์ของ Kiosk และ Barrier Gate
 const BARRIER_PATH = "/landing/barrier-gate";
-const BARRIER_PAYMENT_PATH = "/landing/detail";
+const BARRIER_PAYMENT_PATH = "/landing/check-payment";
 const KIOSK_HOME_PATH = "/landing/dashboard";
 const MOBILE_HOME_PATH = "/landing/search";
 const SHARED_PATHS = new Set([
@@ -21,6 +21,7 @@ const SHARED_PATHS = new Set([
 const MOBILE_PATHS = new Set([
     "/landing/search",
     "/landing/detail",
+    "/landing/check-payment",
 ]);
 
 // ------------------------------- Helpers -------------------------------

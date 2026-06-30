@@ -1,28 +1,42 @@
 "use client";
 
+// Import Libraries
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { normalizePlateNo } from "@/src/app/lib/plate";
-import {
-    getDeviceAuthHeaders,
-    getDeviceId,
-    handleDeviceResponseStatus,
-} from "@/src/app/lib/device";
-import { isAlreadyProcessedTransactionError } from "@/src/app/lib/transactionStatus";
-import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
-import type { ClientTransactionResponse } from "@/src/app/type/client";
 
 // Components
 import BackBtn from "@/src/app/components/BackBtn";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 
+// Libs
+import {
+    getDeviceAuthHeaders,
+    getDeviceId,
+    handleDeviceResponseStatus,
+} from "@/src/app/lib/device";
+import { normalizePlateNo } from "@/src/app/lib/plate";
+import { isAlreadyProcessedTransactionError } from "@/src/app/lib/transactionStatus";
+import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
+
+// Types
+import type { ClientTransactionResponse } from "@/src/app/type/client";
+
 // CSS
 import "@/src/app/css/Scan.css";
 
+// ------------------------------- Config -------------------------------
+
 const SEARCH_API_PATH = "/api/client/transaction";
 
+function hasNoPaymentRequired(transaction: ClientTransactionResponse) {
+    return (transaction.amount?.remainingAmount ?? 0) <= 0;
+}
+
+// ------------------------------- Function -------------------------------
+
+// Function สำหรับค้นหาทะเบียนที่ได้จากการ Scan
 async function fetchKioskSearch(plateNo: string) {
     const deviceId = getDeviceId("kiosk")?.trim() ?? "";
     const searchParams = new URLSearchParams({
@@ -100,6 +114,7 @@ function ScanPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [isAlreadyProcessedError, setIsAlreadyProcessedError] = useState(false);
+    const [isSuccessValidation, setIsSuccessValidation] = useState(false);
     const [showNotFoundPopup, setShowNotFoundPopup] = useState(false);
 
     const bufferRef = useRef("");
@@ -121,6 +136,7 @@ function ScanPage() {
                 setLoading(true);
                 setError("");
                 setIsAlreadyProcessedError(false);
+                setIsSuccessValidation(false);
                 setScannedPlate(trimmedPlate);
 
                 const { status, result, wasRedirected } = await fetchKioskSearch(trimmedPlate);
@@ -152,7 +168,16 @@ function ScanPage() {
                     return;
                 }
 
-                savePlateTransactionResult(trimmedPlate, result as ClientTransactionResponse);
+                const transaction = result as ClientTransactionResponse;
+
+                savePlateTransactionResult(trimmedPlate, transaction);
+
+                if (hasNoPaymentRequired(transaction)) {
+                    setIsSuccessValidation(true);
+                    setError(t("noPaymentRequired"));
+                    resetScanBuffer();
+                    return;
+                }
 
                 router.push(
                     `/landing/detail?plateNo=${encodeURIComponent(trimmedPlate)}`
@@ -201,6 +226,7 @@ function ScanPage() {
                 setScannedPlate(bufferRef.current);
                 setError("");
                 setIsAlreadyProcessedError(false);
+                setIsSuccessValidation(false);
             }
         };
 
@@ -277,7 +303,7 @@ function ScanPage() {
 
                         {error ? (
                             <p
-                                className={`scan-page__error ${isAlreadyProcessedError ? "scan-page__error--processed" : ""}`}
+                                className={`scan-page__error ${isAlreadyProcessedError || isSuccessValidation ? "scan-page__error--processed" : ""}`}
                             >
                                 {error}
                             </p>

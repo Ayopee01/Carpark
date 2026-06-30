@@ -1,4 +1,6 @@
+// Types
 import type { ClientTransactionResponse } from "@/src/app/type/client";
+// Lib
 import { PLATE_RESULT_STORAGE_KEYS } from "@/src/app/lib/storageKeys";
 
 // Function สำหรับบันทึกผลการค้นหา Transaction ลง sessionStorage เพื่อให้หน้า Detail ใช้ต่อ

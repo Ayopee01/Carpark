@@ -1,31 +1,36 @@
 "use client";
 
+// Import Libraries
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-    LuCheck,
-    LuDelete,
-    LuLoader,
-    LuMonitor,
-    LuX,
-} from "react-icons/lu";
-// Lib
+
+// Libs
+import { saveDeviceCredential } from "@/src/app/lib/device";
+import { sendHeartbeat } from "@/src/app/lib/heartbeat";
 import {
     applyKioskThemeToRoot,
     normalizeKioskTheme,
     saveKioskThemeToStorage,
-    type KioskConfigResponse,
 } from "@/src/app/lib/kioskTheme";
-import { sendHeartbeat } from "@/src/app/lib/heartbeat";
-import { saveDeviceCredential } from "@/src/app/lib/device";
 import { KIOSK_CONFIG_UPDATED_EVENT } from "@/src/app/lib/storageKeys";
+
+// Types
+import type { KioskConfigResponse } from "@/src/app/lib/kioskTheme";
 import type { DeviceActivateResponse } from "@/src/app/type/client";
+
 // CSS
 import "@/src/app/css/KioskActivate.css";
 
+// Icons
+import { LuCheck, LuDelete, LuLoader, LuMonitor, LuX } from "react-icons/lu";
+
+// ------------------------------- Config -------------------------------
+
+// กำหนดจำนวนหลักของ Activation Code
 const MAX_CODE_LENGTH = 6;
 
+// กำหนดปุ่มตัวเลขสำหรับคีย์บอร์ดบนหน้าจอ
 const numericKeyboardKeys = [
     "1",
     "2",
@@ -41,6 +46,9 @@ const numericKeyboardKeys = [
     "enter",
 ] as const;
 
+// ------------------------------- Function -------------------------------
+
+// Function สำหรับบันทึก config/theme หลัง Activate สำเร็จ เพื่อให้หน้าอื่นนำไปใช้ต่อทันที
 function saveKioskConfigToLocalStorage(config: KioskConfigResponse) {
     const nextTheme = normalizeKioskTheme(config.theme);
 
@@ -67,19 +75,24 @@ function KioskActivatePage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
-    const [successTarget, setSuccessTarget] = useState<"dashboard" | "barrier">("dashboard");
+    const [successTarget, setSuccessTarget] =
+        useState<"dashboard" | "barrier">("dashboard");
 
     const isLocked = submitting || Boolean(successMessage);
 
-    const canSubmit = useMemo(() => {
-        return code.trim().length === MAX_CODE_LENGTH && !isLocked;
-    }, [code, isLocked]);
+    // ตรวจว่า code ครบจำนวนหลักและหน้ายังไม่ถูกล็อกอยู่หรือไม่
+    const canSubmit = useMemo(
+        () => code.trim().length === MAX_CODE_LENGTH && !isLocked,
+        [code, isLocked]
+    );
 
+    // Function สำหรับล้างข้อความ error/success เมื่อผู้ใช้เริ่มกรอกใหม่
     const clearMessage = useCallback(() => {
         setError("");
         setSuccessMessage("");
     }, []);
 
+    // Function สำหรับเพิ่มตัวเลขจากคีย์บอร์ดบนหน้าจอ
     const handleNumberClick = useCallback(
         (value: string) => {
             if (isLocked) return;
@@ -94,6 +107,7 @@ function KioskActivatePage() {
         [clearMessage, isLocked]
     );
 
+    // Function สำหรับลบตัวเลขล่าสุด
     const handleDelete = useCallback(() => {
         if (isLocked) return;
 
@@ -101,6 +115,7 @@ function KioskActivatePage() {
         clearMessage();
     }, [clearMessage, isLocked]);
 
+    // Function สำหรับส่ง Activation Code ไปให้ Backend และบันทึก credential ของอุปกรณ์
     const handleConfirm = useCallback(async () => {
         if (isLocked) return;
 
@@ -141,6 +156,7 @@ function KioskActivatePage() {
                 throw new Error(t("errorActivateFailed"));
             }
 
+            // บันทึก device credential เพื่อใช้กับ check-in, heartbeat และ API ที่ต้องยืนยันตัวตน
             saveDeviceCredential({
                 deviceId: result.deviceId,
                 deviceToken: result.deviceToken,
@@ -149,8 +165,12 @@ function KioskActivatePage() {
                 location: result.location,
                 status: result.status,
                 activatedAt: new Date().toISOString(),
+                gateId: result.gateId ?? null,
+                cameraId: result.cameraId ?? null,
+                direction: result.direction ?? null,
             });
 
+            // ถ้าเป็น Barrier Gate ให้ heartbeat และ redirect ไปหน้า Barrier Gate
             if (result.deviceType === "barrier_gate") {
                 await sendHeartbeat("barrier-gate").catch((err) => {
                     console.warn("barrier-gate heartbeat after activation failed:", err);
@@ -165,6 +185,7 @@ function KioskActivatePage() {
                 return;
             }
 
+            // ถ้าเป็น Kiosk ให้โหลด config/theme ล่าสุดก่อนเข้า dashboard
             const configResponse = await fetch("/api/devices/config", {
                 method: "GET",
                 cache: "no-store",
@@ -194,6 +215,7 @@ function KioskActivatePage() {
                 router.replace("/landing/dashboard");
             }, 800);
         } catch (err) {
+            // แสดงข้อความ error ที่รองรับการแปลภาษา ถ้าไม่รู้จักให้ใช้ข้อความกลาง
             const localizedErrors = new Set([
                 t("errorActivateFailed"),
                 t("errorConfigFailed"),
@@ -207,6 +229,7 @@ function KioskActivatePage() {
         }
     }, [code, isLocked, router, t]);
 
+    // รองรับการกรอกผ่าน physical keyboard นอกจากปุ่มบนหน้าจอ
     useEffect(() => {
         const handlePhysicalKeyboard = (event: KeyboardEvent) => {
             if (isLocked) return;

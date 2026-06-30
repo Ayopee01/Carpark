@@ -1,9 +1,10 @@
 "use client";
 
+// Import Libraries
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 // Components
@@ -11,7 +12,8 @@ import BackBtn from "@/src/app/components/BackBtn";
 import PlateNotFoundPopup from "@/src/app/components/PlateNotFoundPopup";
 import PaymentPopup from "@/src/app/components/PaymentPopup";
 import ReceiptSuccessPopup from "@/src/app/components/ReceiptSuccessPopup";
-import { normalizePlateNo } from "@/src/app/lib/plate";
+
+// Libs
 import {
     getActivatedDeviceType,
     getDeviceAuthHeaders,
@@ -21,7 +23,10 @@ import {
 import {
     BARRIER_RETURN_STORAGE_KEY,
 } from "@/src/app/lib/storageKeys";
+import { normalizePlateNo } from "@/src/app/lib/plate";
 import { savePlateTransactionResult } from "@/src/app/lib/transactionStorage";
+
+// Types
 import type {
     ClientPaymentResponse,
     ClientTransactionResponse,
@@ -287,6 +292,10 @@ function mapKioskItemToDetailData(
     };
 }
 
+function hasNoPaymentRequired(data: DetailData | null) {
+    return data ? data.amount <= 0 : false;
+}
+
 // ------------------------------- Component -------------------------------
 function DetailPage() {
     const router = useRouter();
@@ -392,6 +401,7 @@ function DetailPage() {
     }, [locale, plate, t]);
 
     const currentData = resolvedPlate === plate ? data : null;
+    const noPaymentRequired = hasNoPaymentRequired(currentData);
 
     const error = !plate
         ? t("errorNoPlate")
@@ -447,6 +457,12 @@ function DetailPage() {
                         {error ? (
                             <div className="detail-error">
                                 {error}
+                            </div>
+                        ) : null}
+
+                        {!error && noPaymentRequired ? (
+                            <div className="detail-error detail-error--success">
+                                {t("noPaymentRequired")}
                             </div>
                         ) : null}
 
@@ -530,7 +546,7 @@ function DetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsPopupOpen(true)}
-                                        disabled={!currentData}
+                                        disabled={!currentData || noPaymentRequired}
                                     >
                                         {common("continue")}
                                     </button>
